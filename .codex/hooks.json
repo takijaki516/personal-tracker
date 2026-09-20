@@ -1,0 +1,17 @@
+{
+  "description": "Check Oxfmt and Oxlint before Codex finishes a turn.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/bash \"$(git rev-parse --show-toplevel)/scripts/codex-stop-check.sh\"",
+            "timeout": 120,
+            "statusMessage": "Checking Oxfmt and Oxlint"
+          }
+        ]
+      }
+    ]
+  }
+}
