@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "singleQuote": true,
+  "jsxSingleQuote": false,
+  "semi": true,
+  "trailingComma": "all",
+  "endOfLine": "lf",
+  "sortImports": { "sortSideEffects": false },
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    "node_modules/**",
+    ".expo/**",
+    "dist/**",
+    "desktop-build/**",
+    "release/**",
+    "android/**",
+    "ios/**",
+    "coverage/**",
+    "expo-env.d.ts",
+    "package-lock.json"
+  ]
+}
