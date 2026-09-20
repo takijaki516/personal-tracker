@@ -1,0 +1,8 @@
+{
+  "cmake.sourceDirectory": "${workspaceFolder}/node_modules/expo-modules-core/android",
+  "js/ts.experimental.useTsgo": false,
+  "[javascript][javascriptreact][typescript][typescriptreact][json][jsonc][yaml][markdown]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode",
+    "editor.formatOnSave": true
+  }
+}
