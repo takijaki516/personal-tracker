@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.DS_Store
+*.local
+
+.expo/
+android/
+ios/
+expo-env.d.ts
+
+desktop-build/
+release/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
