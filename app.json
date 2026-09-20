@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "운동관리",
+    "slug": "harugyeol",
+    "version": "1.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "android": {
+      "package": "com.personaltracker.harugyeol",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#245d48"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/icon.png"
+    },
+    "plugins": [
+      "expo-sharing",
+      "expo-sqlite",
+      "expo-secure-store",
+      "expo-background-task",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Mac의 연결 QR 코드를 스캔합니다.",
+          "recordAudioAndroid": false
+        }
+      ],
+      "./plugins/with-local-network.cjs"
+    ]
+  }
+}
