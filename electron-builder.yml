@@ -1,0 +1,27 @@
+appId: com.personaltracker.harugyeol.desktop
+productName: 운동관리
+artifactName: exercise-tracker-${version}-${arch}.${ext}
+npmRebuild: false
+afterPack: scripts/after-pack.cjs
+directories:
+  output: release
+files:
+  - dist/**/*
+  - desktop-build/**/*
+  - package.json
+  - '!node_modules/**/*'
+extraMetadata:
+  main: desktop-build/main.cjs
+mac:
+  icon: assets/icon.png
+  category: public.app-category.healthcare-fitness
+  target:
+    - dir
+    - dmg
+  identity: '-'
+  entitlements: desktop/entitlements.mac.plist
+  entitlementsInherit: desktop/entitlements.mac.plist
+  extendInfo:
+    NSLocalNetworkUsageDescription: 같은 Wi-Fi의 내 Android 기기와 운동 기록을 동기화합니다.
+    NSAppTransportSecurity:
+      NSAllowsLocalNetworking: true
