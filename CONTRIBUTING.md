@@ -14,12 +14,14 @@ Node 24.3 이상, 25 미만을 사용합니다. `npm ci`는 잠금 파일의 의
 
 ## 코드를 읽는 순서
 
-1. `src/data.ts`와 `src/data.test.ts`: 식단·운동·체중 데이터, 날짜 계산, 백업 검증.
-2. `src/repository.ts`와 테스트: 화면이 기록을 읽고 저장하는 인터페이스.
-3. `src/sync-model.ts`와 테스트: 기록별 버전과 삭제 이력, 충돌 병합. `src/local-engine.ts`는 저장·이전·복원·백업을 순서대로 실행합니다.
-4. `src/native-storage.ts`와 `desktop/storage.ts`: 공통 엔진을 Android와 Mac의 SQLite에 연결합니다.
-5. `src/wire.ts`, `src/services.ts`, `desktop/lan-server.ts`: 암호화, Android 클라이언트, Mac 서버.
-6. `App.tsx` → `src/tracker/TrackerScreen.tsx`: 앱 진입점과 기록 화면. `src/tracker/`에는 기록 편집·날짜 선택·체중 표시 컴포넌트와 저장 상태를 관리하는 `useTrackerRecords.ts`가 있습니다. `src/SyncPanel.tsx`는 백업·동기화 화면이며, `desktop/main.ts`와 `desktop/preload.cjs`는 Electron 창과 IPC 연결을 담당합니다.
+1. `src/domain/data.ts`와 테스트: 식단·운동·체중 데이터, 날짜 계산, 백업 검증.
+2. `src/domain/sync-model.ts`와 테스트: 기록별 버전과 삭제 이력, 충돌 병합.
+3. `src/application/record-repository.ts`와 테스트: 화면이 기록을 읽고 저장하는 인터페이스. `local-engine.ts`는 저장·이전·복원·백업을 순서대로 실행합니다.
+4. `src/infrastructure/native-storage/`와 `desktop/storage.ts`: 공통 엔진을 Android와 Mac의 SQLite에 연결합니다. Android 구현은 데이터베이스, 백업 파일, 엔진 어댑터로 나뉩니다.
+5. `src/infrastructure/wire.ts`, `services.ts`, `desktop/lan-server.ts`: 암호화, Android 클라이언트, Mac 서버.
+6. `App.tsx` → `src/presentation/tracker/TrackerScreen.tsx`: 앱 진입점과 기록 화면. `src/presentation/tracker/`에는 기록 편집·날짜 선택·체중 표시 컴포넌트와 저장 상태를 관리하는 `useTrackerRecords.ts`가 있습니다. `src/presentation/sync/SyncPanel.tsx`는 백업·동기화 화면이며, `desktop/main.ts`와 `desktop/preload.cjs`는 Electron 창과 IPC 연결을 담당합니다.
+
+`src/`는 의존성 방향에 따라 네 계층으로 나뉩니다. `domain`은 플랫폼을 모르고, `application`은 `domain`만 사용합니다. `infrastructure`는 애플리케이션 포트를 Android·웹·Electron 기능에 연결하고, `presentation`은 화면과 사용자 상호작용을 담당합니다. 새 코드는 가능한 한 `presentation → application/domain`, `infrastructure → application/domain` 방향을 유지하세요.
 
 `*.web.ts`와 `*.web.tsx`는 웹/Electron 렌더러용 구현입니다. Expo/Metro가 플랫폼에 맞는 파일을 선택하므로 공통 화면에서는 확장자 없는 모듈 경로로 import합니다. 웹 구현은 `window.exerciseDesktop`이 있으면 Electron 브리지를, 없으면 브라우저 기능을 사용합니다. 공통 데이터·병합 로직에는 플랫폼 API를 넣지 마세요.
 
