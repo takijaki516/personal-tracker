@@ -99,7 +99,7 @@ SQLite가 평소 사용하는 저장소이고 JSON은 복구·이동용 복사�
 npm run check          # 포맷·린트·타입·테스트 전체 검증 (CI와 동일)
 npm run lint           # oxlint 검사 (경고도 실패 처리)
 npm run lint:fix       # 자동 수정 가능한 린트 문제 수정
-npm run format        # Oxfmt로 코드·설정·문서 포맷팅
+npm run format        # Oxlint 안전 수정 후 Oxfmt로 코드·설정·문서 포맷팅
 npm run format:check  # 파일 변경 없이 포맷 검사
 npm run typecheck
 npm test
@@ -110,9 +110,9 @@ npm run desktop:compile
 
 Oxlint 설정은 `.oxlintrc.json`에서 관리합니다. 앱·Electron·스크립트·테스트의 JavaScript/TypeScript를 검사하며, React와 Vitest 규칙을 포함합니다. 빌드 결과물과 생성된 Android/iOS 프로젝트는 제외합니다. 타입 검사는 별도로 `npm run typecheck`를 실행하세요.
 
-포맷팅은 Oxfmt가 담당하며 `.oxfmtrc.json`에서 설정합니다. 들여쓰기 2칸, 작은따옴표(JSX는 큰따옴표), 세미콜론, 줄 너비 100을 기준으로 사용합니다. import는 모듈 종류별로 정렬하고 side-effect import와 `package.json` 키 순서는 유지합니다. 빌드 결과물·생성된 네이티브 프로젝트·`package-lock.json`은 포맷팅에서 제외합니다.
+포맷팅은 Oxfmt가 담당하며 `.oxfmtrc.json`에서 설정합니다. 들여쓰기 2칸, 작은따옴표(JSX는 큰따옴표), 세미콜론, 줄 너비 100을 기준으로 사용합니다. import는 side-effect → Node 내장 → 외부 패키지 → 프로젝트 모듈 → 상대 경로 순으로 그룹화하되, 실행 순서에 영향을 주는 side-effect import 내부 순서는 유지합니다. `package.json` 키 순서도 유지하며, 빌드 결과물·생성된 네이티브 프로젝트·`package-lock.json`은 포맷팅에서 제외합니다.
 
-Oxlint는 중괄호 생략, 중첩 삼항식, 명시적 `any`, 잘못된 Hook 의존성과 `.only`·`.skip` 테스트도 검사합니다. 상세 기준과 변경 절차는 [개발 안내](CONTRIBUTING.md#자동-검사-기준)에 정리되어 있습니다.
+Oxlint는 중괄호 생략, 중첩 삼항식, 명시적 `any`, 중복·자기 자신 import, 위험한 동적 코드 실행, React key·HTML 삽입, 잘못된 Hook 의존성과 `.only`·`.skip` 테스트도 검사합니다. 속성이 2개 이상인 객체의 줄바꿈과 type 선언 뒤 빈 줄도 자동 수정하며, `npm run format`과 VS Code 저장 시 Oxfmt보다 먼저 적용됩니다. 상세 기준과 변경 절차는 [개발 안내](CONTRIBUTING.md#자동-검사-기준)에 정리되어 있습니다.
 
 VS Code에서는 프로젝트 추천 확장인 [Oxc](https://marketplace.visualstudio.com/items?itemName=oxc.oxc-vscode)를 설치하면 JavaScript/TypeScript, JSON, YAML, Markdown 파일을 저장할 때 자동 포맷팅합니다.
 
