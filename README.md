@@ -122,15 +122,15 @@ VS Code에서는 프로젝트 추천 확장인 [Oxc](https://marketplace.visuals
 
 ## 주요 파일
 
-- `App.tsx`, `src/tracker/TrackerScreen.tsx`: 앱 진입점과 기록 화면
-- `src/tracker/`: 기록 편집·날짜 선택·체중 표시 컴포넌트와 저장 상태 관리
-- `src/SyncPanel.tsx`, `src/PairScanner.tsx`: 백업·연결·동기화 UI
-- `src/data.ts`: 기존 JSON 데이터 형식 및 검증
-- `src/sync-model.ts`: 기록별 버전·삭제 이력·병합
-- `src/local-engine.ts`: 저장·이전·백업·복원 직렬화
-- `src/native-storage.ts`: Android SQLite 및 백업 파일
-- `src/services.ts`, `src/background.ts`: Android LAN 클라이언트·백그라운드 작업
-- `src/services.web.ts`, `src/platform.web.ts`: 브라우저 및 Electron 연결
+- `src/domain/`: 기록 데이터 형식·검증과 동기화 병합 규칙
+- `src/application/`: 기록 저장 인터페이스와 저장·이전·백업·복원 유스케이스
+- `src/infrastructure/`: Android SQLite·파일, 브라우저 저장소, Electron 브리지, LAN 통신
+- `src/presentation/tracker/`: 기록 편집·날짜 선택·체중 표시 화면과 상태 관리
+- `src/presentation/sync/`: 백업·기기 연결·동기화 화면
+- `App.tsx`, `src/presentation/tracker/TrackerScreen.tsx`: 앱 진입점과 최상위 기록 화면
+- `src/infrastructure/native-storage/`: Android SQLite, 백업 파일 및 엔진 어댑터
+- `src/infrastructure/services.ts`, `background.ts`: Android LAN 클라이언트·백그라운드 작업
+- `src/infrastructure/services.web.ts`, `platform.web.ts`: 브라우저 및 Electron 연결
 - `desktop/storage.ts`: Mac SQLite 및 백업 파일
 - `desktop/lan-server.ts`: 암호화된 LAN 통신 및 Android 응답 대기
 - `desktop/main.ts`, `desktop/preload.cjs`: 격리된 Electron 창과 제한된 IPC
