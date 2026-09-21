@@ -8,32 +8,32 @@
 
 | 작업 영역         | 확인할 파일과 역할                                                                                                                                                                                 |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 앱 시작           | `index.ts`가 Expo 루트를 등록하고, `App.tsx`가 SafeAreaProvider와 `src/tracker/TrackerScreen.tsx`를 연결                                                                                           |
-| 화면 조합         | `src/tracker/TrackerScreen.tsx`가 날짜·탭·모달 상태, 삭제 확인, 수동 백업·복원 흐름과 하위 화면 조합을 담당                                                                                        |
-| 기록 상태·저장    | `src/tracker/useTrackerRecords.ts`: 로딩·저장·복원·갱신, 저장 오류와 동시 작업 보호                                                                                                                |
-| 데이터·저장 규칙  | `src/data.ts` 타입·날짜·백업 검증, `src/repository.ts` 읽기·쓰기 인터페이스, `src/local-engine.ts` 저장·이전·복원·백업 직렬 실행                                                                   |
-| 동기화 모델       | `src/sync-model.ts`: 기록별 논리 버전·삭제 표시·병합. 화면/JSON 백업용 `Store`와 동기화용 `SyncDocument`를 구분                                                                                    |
-| 플랫폼 입출력     | `src/platform.ts` Android 저장·파일 선택·공유, `src/platform.web.ts` Electron 브리지 또는 브라우저 기능 선택                                                                                       |
-| SQLite 구현       | `src/native-storage.ts` Expo SQLite·기존 AsyncStorage 이전, `desktop/storage.ts` Node SQLite. 양쪽 모두 공통 저장 엔진에 어댑터를 제공                                                             |
-| 연결·자동 백업 UI | `src/SyncPanel.tsx` 기기 연결·백업 목록·주기적 유지 작업·동기화 후 화면 갱신, `src/PairScanner.tsx` Android QR 스캔                                                                                |
-| 통신·백그라운드   | `src/services.ts` Android LAN 클라이언트, `desktop/lan-server.ts` Mac 서버, `src/wire.ts` 연결 코드·암호화·통신 데이터 검증, `src/background.ts` Android 백그라운드 작업                           |
-| Electron 경계     | `desktop/main.ts` 창·IPC·서버 수명주기, `desktop/preload.cjs` API 노출, `src/desktop-bridge.ts` 브리지 타입, `src/services.web.ts` 렌더러 서비스                                                   |
+| 앱 시작           | `index.ts`가 Expo 루트를 등록하고, `App.tsx`가 SafeAreaProvider와 `src/presentation/tracker/TrackerScreen.tsx`를 연결                                                                              |
+| 화면 조합         | `src/presentation/tracker/TrackerScreen.tsx`가 날짜·탭·모달 상태, 삭제 확인, 수동 백업·복원 흐름과 하위 화면 조합을 담당                                                                           |
+| 기록 상태·저장    | `src/presentation/tracker/useTrackerRecords.ts`: 로딩·저장·복원·갱신, 저장 오류와 동시 작업 보호                                                                                                   |
+| 데이터 규칙       | `src/domain/data.ts` 타입·날짜·백업 검증, `src/domain/sync-model.ts` 기록별 논리 버전·삭제 표시·병합                                                                                               |
+| 애플리케이션 흐름 | `src/application/record-repository.ts` 읽기·쓰기 유스케이스, `src/application/local-engine.ts` 저장·이전·복원·백업 직렬 실행                                                                       |
+| 플랫폼 입출력     | `src/infrastructure/platform.ts` Android 저장·파일 선택·공유, `platform.web.ts` Electron 브리지 또는 브라우저 기능 선택                                                                            |
+| SQLite 구현       | `src/infrastructure/native-storage/` Expo SQLite·백업·기존 AsyncStorage 이전, `desktop/storage.ts` Node SQLite. 양쪽 모두 공통 저장 엔진에 어댑터를 제공                                           |
+| 연결·자동 백업 UI | `src/presentation/sync/SyncPanel.tsx` 기기 연결·백업 목록·주기적 유지 작업·동기화 후 화면 갱신, `PairScanner.tsx` Android QR 스캔                                                                  |
+| 통신·백그라운드   | `src/infrastructure/services.ts` Android LAN 클라이언트, `desktop/lan-server.ts` Mac 서버, `src/infrastructure/wire.ts` 암호화·통신 검증, `background.ts` 백그라운드 작업                          |
+| Electron 경계     | `desktop/main.ts` 창·IPC·서버 수명주기, `desktop/preload.cjs` API 노출, `src/infrastructure/desktop-bridge.ts` 브리지 타입, `services.web.ts` 렌더러 서비스                                        |
 | 설정·빌드         | `app.json` Expo, `plugins/with-local-network.cjs` Android 네트워크, `scripts/build-desktop.mjs` Electron 번들, `scripts/after-pack.cjs` Mac 패키징 후처리, `electron-builder.yml` 패키징·권한 설정 |
 | 타입·테스트       | `tsconfig.json` 앱, `tsconfig.desktop.json` Electron·공통 모듈. `src/*.test.ts` 데이터·저장·병합·통신 검증, `desktop/*.test.ts` 실제 SQLite·로컬 HTTP 테스트                                       |
 
-`src/tracker/`에서 UI를 수정할 때는 아래 파일부터 확인합니다. 이 목록의 경로는 해당 폴더 기준입니다.
+`src/presentation/tracker/`에서 UI를 수정할 때는 아래 파일부터 확인합니다. 이 목록의 경로는 해당 폴더 기준입니다.
 
 - `DailySummary.tsx` 일일 요약, `DailyRecords.tsx` 식단·운동 목록, `WeightPanel.tsx` 체중 그래프·이력.
-- `RecordEditor.tsx` 입력 폼·입력값 검증·저장 요청. 검증 범위 변경 시 `src/data.ts`의 백업 검증도 함께 확인합니다.
+- `RecordEditor.tsx` 입력 폼·입력값 검증·저장 요청. 검증 범위 변경 시 `src/domain/data.ts`의 백업 검증도 함께 확인합니다.
 - `DateNavigation.tsx` 날짜 이동 및 `DatePicker.tsx` 연결, `ConfirmationDialog.tsx` 삭제·복원 확인.
-- `BackupPanel.tsx` 수동 백업·복원 버튼, `TrackerSidebar.tsx` 사이드바, `Button.tsx`·`Field.tsx` 공통 컨트롤, `styles.ts` 기록 화면 스타일. `src/SyncPanel.tsx`는 자체 스타일을 관리합니다.
+- `BackupPanel.tsx` 수동 백업·복원 버튼, `TrackerSidebar.tsx` 사이드바, `Button.tsx`·`Field.tsx` 공통 컨트롤, `styles.ts` 기록 화면 스타일. `src/presentation/sync/SyncPanel.tsx`는 자체 스타일을 관리합니다.
 
 핵심 실행 경로와 플랫폼 경계:
 
-- 일반 저장: `useTrackerRecords` → `repository` → `platform` → 공통 엔진 → SQLite. Mac은 `platform.web` → `window.exerciseDesktop` → preload/IPC → 엔진을 거치며, 일반 브라우저는 localStorage에 저장합니다.
+- 일반 저장: `useTrackerRecords` → `record-repository` → `platform` → 공통 엔진 → SQLite. Mac은 `platform.web` → `window.exerciseDesktop` → preload/IPC → 엔진을 거치며, 일반 브라우저는 localStorage에 저장합니다.
 - 복원: `TrackerScreen`에서 파일 선택·검증·확인 → `useTrackerRecords.persist` → `services.restoreStored`. 설치 앱의 엔진은 보호 백업 후 기록을 교체합니다.
 - 동기화: Android `services` ↔ Mac `lan-server`가 `wire`로 암호화된 문서를 교환하고 각 엔진이 병합합니다. `SyncPanel`의 `onChange`는 `useTrackerRecords.refresh`로 연결됩니다.
-- `*.web.ts`·`*.web.tsx`는 웹/Electron 렌더러 구현입니다. 공통 화면은 확장자 없는 import를 유지합니다. `src/PairScanner.web.tsx`는 화면을 표시하지 않고, `src/background.web.ts`는 네이티브 백그라운드 작업을 등록하지 않습니다.
+- `*.web.ts`·`*.web.tsx`는 웹/Electron 렌더러 구현입니다. 공통 화면은 확장자 없는 import를 유지합니다. `src/presentation/sync/PairScanner.web.tsx`는 화면을 표시하지 않고, `src/infrastructure/background.web.ts`는 네이티브 백그라운드 작업을 등록하지 않습니다.
 - 빌드 결과: `dist/` 웹 자산, `desktop-build/` Electron 실행 코드, `release/` Mac 앱·DMG. 수정은 원본 소스에서 합니다.
 
 ## 환경과 도구
