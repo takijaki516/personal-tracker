@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { emptyStore, type Day, type Store } from '../data';
-import { readStored, writeStored } from '../platform';
-import { loadRecords, saveRecords } from '../repository';
-import { restoreStored } from '../services';
+import { loadRecords, saveRecords } from '../../application/record-repository';
+import { emptyStore, type Day, type Store } from '../../domain/data';
+import { readStored, writeStored } from '../../infrastructure/platform';
+import { restoreStored } from '../../infrastructure/services';
 
 const storage = { read: readStored, write: writeStored };
 export type SaveResult = { ok: boolean; error?: string };
@@ -18,6 +18,7 @@ export function useTrackerRecords() {
   const [message, setMessage] = useState('');
   const saving = useRef(false);
   const dataRevision = useRef(0);
+
   useEffect(() => {
     let active = true;
     loadRecords(storage)
@@ -43,6 +44,7 @@ export function useTrackerRecords() {
       active = false;
     };
   }, []);
+
   async function persist(next: Store, restoring = false): Promise<SaveResult> {
     if (saving.current || !loaded) {
       return { ok: false };
@@ -73,6 +75,7 @@ export function useTrackerRecords() {
       setBusy(false);
     }
   }
+
   function updateDay(next: Day, target: string) {
     return persist({ ...data, days: { ...data.days, [target]: next } });
   }

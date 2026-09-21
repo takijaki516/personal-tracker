@@ -12,10 +12,10 @@
   },
   "include": [
     "desktop/**/*.ts",
-    "src/data.ts",
-    "src/sync-model.ts",
-    "src/local-engine.ts",
-    "src/wire.ts",
-    "src/desktop-bridge.ts"
+    "src/domain/data.ts",
+    "src/domain/sync-model.ts",
+    "src/application/local-engine.ts",
+    "src/infrastructure/wire.ts",
+    "src/infrastructure/desktop-bridge.ts"
   ]
 }

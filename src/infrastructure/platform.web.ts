@@ -1,4 +1,4 @@
-import { STORAGE_KEY } from './data';
+import { STORAGE_KEY } from '../domain/data';
 import type {} from './desktop-bridge';
 
 // Keep the original PWA key: existing records survive on the same web origin.

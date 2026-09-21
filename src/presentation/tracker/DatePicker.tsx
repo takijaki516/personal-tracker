@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Modal, Text, View } from 'react-native';
 
-import { isDate } from '../data';
+import { isDate } from '../../domain/data';
 import Button from './Button';
 import Field from './Field';
 import { styles as s } from './styles';

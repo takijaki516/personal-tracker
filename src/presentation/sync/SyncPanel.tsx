@@ -2,10 +2,9 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AppState, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
-import { registerBackground } from './background';
-import type { BackupInfo, ConnectionInfo } from './desktop-bridge';
-import PairScanner from './PairScanner';
-import { exportBackup } from './platform';
+import { registerBackground } from '../../infrastructure/background';
+import type { BackupInfo, ConnectionInfo } from '../../infrastructure/desktop-bridge';
+import { exportBackup } from '../../infrastructure/platform';
 import {
   connect,
   disconnect,
@@ -15,7 +14,8 @@ import {
   readBackup,
   syncNow,
   watchSync,
-} from './services';
+} from '../../infrastructure/services';
+import PairScanner from './PairScanner';
 
 function connectionLabel(info: ConnectionInfo | null): string {
   if (!info?.connected) {

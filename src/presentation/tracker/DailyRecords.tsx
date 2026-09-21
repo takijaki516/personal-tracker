@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 
-import type { Day } from '../data';
+import type { Day } from '../../domain/data';
 import Button from './Button';
 import type { RecordKind } from './RecordEditor';
 import { styles as s } from './styles';

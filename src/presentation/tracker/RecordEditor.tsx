@@ -2,7 +2,7 @@ import * as Crypto from 'expo-crypto';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, Text, View } from 'react-native';
 
-import type { Day } from '../data';
+import type { Day } from '../../domain/data';
 import Button from './Button';
 import Field from './Field';
 import { styles as s } from './styles';

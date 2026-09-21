@@ -1,4 +1,4 @@
-import { emptyStore, localDate, parseStore } from './data';
+import { emptyStore, localDate, parseStore } from '../domain/data';
 import {
   editDocument,
   mergeDocuments,
@@ -7,7 +7,7 @@ import {
   parseDocument,
   snapshot,
   type SyncDocument,
-} from './sync-model';
+} from '../domain/sync-model';
 
 export type LocalAdapter = {
   load(): Promise<SyncDocument | null>;
@@ -16,6 +16,7 @@ export type LocalAdapter = {
   backup(day: string, raw: string, reason?: string): Promise<void>;
   uuid(): string;
 };
+
 export function createEngine(adapter: LocalAdapter) {
   let queue: Promise<unknown> = Promise.resolve();
   const serial = <T>(action: () => Promise<T>): Promise<T> => {
@@ -76,4 +77,5 @@ export function createEngine(adapter: LocalAdapter) {
       }),
   };
 }
+
 export type LocalEngine = ReturnType<typeof createEngine>;

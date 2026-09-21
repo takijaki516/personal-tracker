@@ -9,9 +9,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { emptyDay, localDate, parseStore } from '../data';
-import { exportBackup, importBackup } from '../platform';
-import SyncPanel from '../SyncPanel';
+import { emptyDay, localDate, parseStore } from '../../domain/data';
+import { exportBackup, importBackup } from '../../infrastructure/platform';
+import SyncPanel from '../sync/SyncPanel';
 import BackupPanel from './BackupPanel';
 import Button from './Button';
 import ConfirmationDialog, { type Confirmation } from './ConfirmationDialog';

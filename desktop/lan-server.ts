@@ -1,8 +1,8 @@
 import { randomBytes } from 'node:crypto';
 import { createServer } from 'node:http';
 
-import type { LocalEngine } from '../src/local-engine';
-import { seal, unseal } from '../src/wire';
+import type { LocalEngine } from '../src/application/local-engine';
+import { seal, unseal } from '../src/infrastructure/wire';
 
 export function createLanServer(engine: LocalEngine, key: () => string, onSync: () => void) {
   const seen = new Map<string, number>();

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { emptyStore } from './data';
-import { loadRecords, saveRecords, type StoragePort } from './repository';
+import { emptyStore } from '../domain/data';
+import { loadRecords, saveRecords, type StoragePort } from './record-repository';
 describe('async storage migration', () => {
   it('loads original PWA backup format', async () => {
     const data = { version: 1, days: { '2026-09-14': { weight: 72, meals: [], workouts: [] } } };

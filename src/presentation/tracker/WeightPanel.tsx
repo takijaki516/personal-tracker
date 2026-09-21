@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 import Svg, { Circle, Line, Polyline } from 'react-native-svg';
 
-import { shiftDate, type Store } from '../data';
+import { shiftDate, type Store } from '../../domain/data';
 import Button from './Button';
 import { styles as s } from './styles';
 

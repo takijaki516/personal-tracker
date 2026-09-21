@@ -11,9 +11,9 @@ import {
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
-import { parseStore } from '../src/data';
-import { createEngine } from '../src/local-engine';
-import { parseDocument } from '../src/sync-model';
+import { createEngine } from '../src/application/local-engine';
+import { parseStore } from '../src/domain/data';
+import { parseDocument } from '../src/domain/sync-model';
 
 export function openStorage(directory: string) {
   mkdirSync(directory, { recursive: true, mode: 0o700 });

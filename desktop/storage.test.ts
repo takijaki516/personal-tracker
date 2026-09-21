@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { emptyDay, emptyStore, localDate } from '../src/data';
+import { emptyDay, emptyStore, localDate } from '../src/domain/data';
 import { openStorage } from './storage';
 const dirs: string[] = [];
 afterEach(() => {

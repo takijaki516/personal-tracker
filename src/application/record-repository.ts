@@ -1,4 +1,4 @@
-import { emptyStore, parseStore, type Store } from './data';
+import { emptyStore, parseStore, type Store } from '../domain/data';
 export type StoragePort = {
   read: () => Promise<string | null>;
   write: (raw: string, base?: string) => Promise<void>;

@@ -6,9 +6,9 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { emptyDay, emptyStore } from '../src/data';
-import { editDocument, newDocument, parseDocument, snapshot } from '../src/sync-model';
-import { encodeBytes, parsePairing, seal, unseal } from '../src/wire';
+import { emptyDay, emptyStore } from '../src/domain/data';
+import { editDocument, newDocument, parseDocument, snapshot } from '../src/domain/sync-model';
+import { encodeBytes, parsePairing, seal, unseal } from '../src/infrastructure/wire';
 import { createLanServer } from './lan-server';
 import { openStorage } from './storage';
 const cleanups: (() => void)[] = [];

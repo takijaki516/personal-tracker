@@ -6,9 +6,9 @@ import { pathToFileURL } from 'node:url';
 
 import { app, BrowserWindow, ipcMain, dialog, protocol, net, safeStorage } from 'electron';
 
-import { parseStore } from '../src/data';
-import type { ConnectionInfo } from '../src/desktop-bridge';
-import { encodeBytes, pairingText } from '../src/wire';
+import { parseStore } from '../src/domain/data';
+import type { ConnectionInfo } from '../src/infrastructure/desktop-bridge';
+import { encodeBytes, pairingText } from '../src/infrastructure/wire';
 import { createLanServer } from './lan-server';
 import { openStorage } from './storage';
 

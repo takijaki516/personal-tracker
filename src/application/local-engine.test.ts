@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { emptyDay, emptyStore } from './data';
+import { emptyDay, emptyStore } from '../domain/data';
+import type { SyncDocument } from '../domain/sync-model';
 import { createEngine, type LocalAdapter } from './local-engine';
-import type { SyncDocument } from './sync-model';
 const data = { version: 1 as const, days: { '2026-09-15': { ...emptyDay(), weight: 70 } } };
 function fixture(raw: string | null = null) {
   let doc: SyncDocument | null = null;
