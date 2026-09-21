@@ -3,9 +3,7 @@ import { readFileSync, writeFileSync, existsSync, statSync, chmodSync } from 'no
 import { networkInterfaces } from 'node:os';
 import { join, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
-
 import { app, BrowserWindow, ipcMain, dialog, protocol, net, safeStorage } from 'electron';
-
 import { parseStore } from '../src/domain/data';
 import type { ConnectionInfo } from '../src/infrastructure/desktop-bridge';
 import { encodeBytes, pairingText } from '../src/infrastructure/wire';
@@ -13,7 +11,14 @@ import { createLanServer } from './lan-server';
 import { openStorage } from './storage';
 
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'exercise-app', privileges: { standard: true, secure: true, supportFetchAPI: true } },
+  {
+    scheme: 'exercise-app',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+    },
+  },
 ]);
 app.setName('운동관리');
 const smokeDir = process.env.EXERCISE_SMOKE_DIR;
@@ -137,7 +142,13 @@ if (!app.requestSingleInstanceLock()) {
           mode: 'desktop',
           codes:
             !serverError && secret
-              ? hosts.map((host) => pairingText({ host, port: 47831, key: secret }))
+              ? hosts.map((host) =>
+                  pairingText({
+                    host,
+                    port: 47831,
+                    key: secret,
+                  }),
+                )
               : [],
           connected: lan.active(),
           lastSync: store.get('lastSync'),
@@ -172,7 +183,12 @@ if (!app.requestSingleInstanceLock()) {
         }
         const result = await dialog.showSaveDialog(window, {
           defaultPath: name,
-          filters: [{ name: 'JSON', extensions: ['json'] }],
+          filters: [
+            {
+              name: 'JSON',
+              extensions: ['json'],
+            },
+          ],
         });
         if (!result.canceled && result.filePath) {
           writeFileSync(result.filePath, content, { mode: 0o600 });
@@ -181,7 +197,12 @@ if (!app.requestSingleInstanceLock()) {
       handle('backup:import', async () => {
         const result = await dialog.showOpenDialog(window, {
           properties: ['openFile'],
-          filters: [{ name: 'JSON', extensions: ['json'] }],
+          filters: [
+            {
+              name: 'JSON',
+              extensions: ['json'],
+            },
+          ],
         });
         if (result.canceled) {
           return null;

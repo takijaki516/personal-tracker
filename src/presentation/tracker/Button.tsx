@@ -1,5 +1,4 @@
 import { Pressable, Text } from 'react-native';
-
 import { styles as s } from './styles';
 
 export default function Button({
@@ -18,7 +17,10 @@ export default function Button({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ disabled, selected }}
+      accessibilityState={{
+        disabled,
+        selected,
+      }}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [

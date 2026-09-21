@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-
 import { localDate, shiftDate } from '../../domain/data';
 import Button from './Button';
 import DatePicker from './DatePicker';

@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["unicorn", "typescript", "oxc", "react", "vitest"],
+  "plugins": ["import", "unicorn", "typescript", "oxc", "react", "vitest"],
+  "jsPlugins": [{ "name": "style", "specifier": "@stylistic/eslint-plugin" }],
   "categories": {
     "correctness": "error"
   },
@@ -12,6 +13,11 @@
     "eslint/no-nested-ternary": "error",
     "eslint/no-console": ["error", { "allow": ["warn", "error"] }],
     "eslint/no-debugger": "error",
+    "eslint/no-eval": "error",
+    "eslint/no-implied-eval": "error",
+    "eslint/no-unused-expressions": ["error", { "allowShortCircuit": true, "allowTernary": true }],
+    "eslint/no-useless-catch": "error",
+    "eslint/prefer-rest-params": "error",
     "eslint/no-unused-vars": [
       "error",
       {
@@ -21,13 +27,40 @@
         "caughtErrorsIgnorePattern": "^_"
       }
     ],
+    "import/no-duplicates": "error",
+    "import/no-self-import": "error",
+    "style/object-curly-newline": [
+      "error",
+      {
+        "ObjectExpression": { "multiline": true, "minProperties": 2, "consistent": true }
+      }
+    ],
+    "style/padding-line-between-statements": [
+      "error",
+      { "blankLine": "always", "prev": "type", "next": "*" },
+      {
+        "blankLine": "always",
+        "prev": { "selector": "ExportNamedDeclaration[declaration.type='TSTypeAliasDeclaration']" },
+        "next": "*"
+      },
+      { "blankLine": "any", "prev": "type", "next": "type" }
+    ],
     "typescript/consistent-type-imports": [
       "error",
       { "prefer": "type-imports", "fixStyle": "inline-type-imports" }
     ],
     "typescript/no-explicit-any": "error",
+    "typescript/prefer-as-const": "error",
+    "unicorn/no-new-buffer": "error",
+    "react/jsx-key": [
+      "error",
+      { "checkFragmentShorthand": true, "checkKeyMustBeforeSpread": true, "warnOnDuplicates": true }
+    ],
+    "react/no-danger": "error",
+    "react/no-danger-with-children": "error",
     "react/rules-of-hooks": "error",
-    "react/exhaustive-deps": "error"
+    "react/exhaustive-deps": "error",
+    "react/self-closing-comp": "error"
   },
   "overrides": [
     {

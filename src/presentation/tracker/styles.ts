@@ -1,9 +1,20 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#f6f7f2' },
-  shell: { flex: 1, flexDirection: 'row' },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 15 },
+  root: {
+    flex: 1,
+    backgroundColor: '#f6f7f2',
+  },
+  shell: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 15,
+  },
   sidebar: {
     width: 220,
     padding: 28,
@@ -12,14 +23,55 @@ export const styles = StyleSheet.create({
     borderColor: '#e2e7dd',
     backgroundColor: '#fbfcf8',
   },
-  brand: { fontSize: 26, fontWeight: '800', color: '#245d48' },
-  sidebarQuote: { fontSize: 19, lineHeight: 32, color: '#627356', marginTop: 15, marginBottom: 40 },
-  content: { padding: 40, width: '100%', maxWidth: 1350, alignSelf: 'center', paddingBottom: 45 },
-  eyebrow: { fontSize: 10, letterSpacing: 2.5, color: '#788c69', fontWeight: '600' },
-  title: { fontSize: 27, fontWeight: '700', color: '#263a30', marginTop: 14, marginBottom: 12 },
-  subtitle: { fontSize: 13, lineHeight: 23, color: '#7c8b72', marginTop: 6 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  between: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  brand: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#245d48',
+  },
+  sidebarQuote: {
+    fontSize: 19,
+    lineHeight: 32,
+    color: '#627356',
+    marginTop: 15,
+    marginBottom: 40,
+  },
+  content: {
+    padding: 40,
+    width: '100%',
+    maxWidth: 1350,
+    alignSelf: 'center',
+    paddingBottom: 45,
+  },
+  eyebrow: {
+    fontSize: 10,
+    letterSpacing: 2.5,
+    color: '#788c69',
+    fontWeight: '600',
+  },
+  title: {
+    fontSize: 27,
+    fontWeight: '700',
+    color: '#263a30',
+    marginTop: 14,
+    marginBottom: 12,
+  },
+  subtitle: {
+    fontSize: 13,
+    lineHeight: 23,
+    color: '#7c8b72',
+    marginTop: 6,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  between: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   datebar: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -36,8 +88,15 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonText: { fontSize: 12, color: '#42633b', fontWeight: '500' },
-  primary: { backgroundColor: '#245d48', paddingHorizontal: 22 },
+  buttonText: {
+    fontSize: 12,
+    color: '#42633b',
+    fontWeight: '500',
+  },
+  primary: {
+    backgroundColor: '#245d48',
+    paddingHorizontal: 22,
+  },
   selected: { backgroundColor: '#e7eedc' },
   notice: {
     padding: 12,
@@ -47,9 +106,21 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 15,
   },
-  body: { fontSize: 13, lineHeight: 22, color: '#52654b' },
-  caption: { fontSize: 11, lineHeight: 19, color: '#849078' },
-  stats: { flexDirection: 'row', gap: 10, marginBottom: 28 },
+  body: {
+    fontSize: 13,
+    lineHeight: 22,
+    color: '#52654b',
+  },
+  caption: {
+    fontSize: 11,
+    lineHeight: 19,
+    color: '#849078',
+  },
+  stats: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 28,
+  },
   stat: {
     flex: 1,
     padding: 22,
@@ -58,10 +129,23 @@ export const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: '#fff',
   },
-  statValue: { fontSize: 34, fontWeight: '600', color: '#263a30', marginVertical: 19 },
-  unit: { fontSize: 13, fontWeight: '400', color: '#8a957f' },
+  statValue: {
+    fontSize: 34,
+    fontWeight: '600',
+    color: '#263a30',
+    marginVertical: 19,
+  },
+  unit: {
+    fontSize: 13,
+    fontWeight: '400',
+    color: '#8a957f',
+  },
   columns: { gap: 22 },
-  sectionTitle: { fontSize: 16, fontWeight: '600', color: '#2f4536' },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2f4536',
+  },
   card: {
     padding: 18,
     borderWidth: 1,
@@ -69,7 +153,11 @@ export const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: '#fff',
   },
-  empty: { paddingVertical: 35, alignItems: 'center', gap: 9 },
+  empty: {
+    paddingVertical: 35,
+    alignItems: 'center',
+    gap: 9,
+  },
   record: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -87,9 +175,24 @@ export const styles = StyleSheet.create({
     borderRadius: 6,
     overflow: 'hidden',
   },
-  weight: { fontSize: 38, fontWeight: '500', color: '#263a30', marginTop: 22 },
-  gentle: { padding: 22, backgroundColor: '#eaf0df', borderRadius: 14 },
-  footer: { marginTop: 32, paddingTop: 23, borderTopWidth: 1, borderColor: '#e2e7dd', gap: 5 },
+  weight: {
+    fontSize: 38,
+    fontWeight: '500',
+    color: '#263a30',
+    marginTop: 22,
+  },
+  gentle: {
+    padding: 22,
+    backgroundColor: '#eaf0df',
+    borderRadius: 14,
+  },
+  footer: {
+    marginTop: 32,
+    paddingTop: 23,
+    borderTopWidth: 1,
+    borderColor: '#e2e7dd',
+    gap: 5,
+  },
   overlay: {
     flex: 1,
     backgroundColor: '#17281e80',
@@ -105,8 +208,14 @@ export const styles = StyleSheet.create({
     maxWidth: 460,
     maxHeight: '90%',
   },
-  field: { marginTop: 20, gap: 8 },
-  label: { fontSize: 13, color: '#607354' },
+  field: {
+    marginTop: 20,
+    gap: 8,
+  },
+  label: {
+    fontSize: 13,
+    color: '#607354',
+  },
   input: {
     borderWidth: 1,
     borderColor: '#dce3d5',
@@ -117,5 +226,10 @@ export const styles = StyleSheet.create({
     color: '#263a30',
     minHeight: 46,
   },
-  error: { fontSize: 12, lineHeight: 20, color: '#a14332', marginTop: 14 },
+  error: {
+    fontSize: 12,
+    lineHeight: 20,
+    color: '#a14332',
+    marginTop: 14,
+  },
 });

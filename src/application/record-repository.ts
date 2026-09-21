@@ -3,6 +3,7 @@ export type StoragePort = {
   read: () => Promise<string | null>;
   write: (raw: string, base?: string) => Promise<void>;
 };
+
 export async function loadRecords(storage: StoragePort): Promise<Store> {
   const raw = await storage.read();
   return raw === null ? emptyStore() : parseStore(raw);

@@ -1,22 +1,31 @@
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-
 import { afterEach, describe, expect, it } from 'vitest';
-
 import { emptyDay, emptyStore, localDate } from '../src/domain/data';
 import { openStorage } from './storage';
 const dirs: string[] = [];
 afterEach(() => {
   for (const dir of dirs.splice(0)) {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, {
+      recursive: true,
+      force: true,
+    });
   }
 });
 describe('actual SQLite disk storage', () => {
   it('persists across restart, backs up once per day and keeps pre-restore history', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'exercise-db-'));
     dirs.push(dir);
-    const data = { version: 1 as const, days: { [localDate()]: { ...emptyDay(), weight: 72 } } };
+    const data = {
+      version: 1 as const,
+      days: {
+        [localDate()]: {
+          ...emptyDay(),
+          weight: 72,
+        },
+      },
+    };
     let store = openStorage(dir);
     await store.engine.write(JSON.stringify(data));
     await store.engine.dailyBackup();

@@ -1,6 +1,5 @@
 import * as Crypto from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
-
 import type { ConnectionInfo } from './desktop-bridge';
 import {
   engine,
@@ -33,7 +32,16 @@ async function request(kind: 'sync' | 'wait' | 'ack', signal?: AbortSignal) {
     const response = await fetch(`http://${peer.host}:${peer.port}/${kind}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: seal({ id, kind, doc, sentAt: Date.now() }, peer.key, Crypto.getRandomBytes),
+      body: seal(
+        {
+          id,
+          kind,
+          doc,
+          sentAt: Date.now(),
+        },
+        peer.key,
+        Crypto.getRandomBytes,
+      ),
       signal: controller.signal,
     });
     if (!response.ok) {

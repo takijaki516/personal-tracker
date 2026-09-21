@@ -1,6 +1,5 @@
 import { randomBytes } from 'node:crypto';
 import { createServer } from 'node:http';
-
 import type { LocalEngine } from '../src/application/local-engine';
 import { seal, unseal } from '../src/infrastructure/wire';
 
@@ -59,8 +58,21 @@ export function createLanServer(engine: LocalEngine, key: () => string, onSync: 
       const reply = (data: object) => {
         if (!res.destroyed && !res.writableEnded) {
           res
-            .writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
-            .end(seal({ id: value.id, kind: value.kind, ...data }, requestKey, randomBytes));
+            .writeHead(200, {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-store',
+            })
+            .end(
+              seal(
+                {
+                  id: value.id,
+                  kind: value.kind,
+                  ...data,
+                },
+                requestKey,
+                randomBytes,
+              ),
+            );
         }
       };
       if (value.kind === 'sync') {

@@ -1,5 +1,4 @@
 import { mkdir, copyFile } from 'node:fs/promises';
-
 import { build } from 'esbuild';
 await mkdir('desktop-build', { recursive: true });
 await build({

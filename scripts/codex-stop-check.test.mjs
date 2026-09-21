@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-
 import { runQualityChecks } from './codex-stop-check.mjs';
 
 function runner(results) {
@@ -7,22 +6,42 @@ function runner(results) {
   return {
     calls,
     run(command, args, options) {
-      calls.push({ command, args, cwd: options.cwd });
+      calls.push({
+        command,
+        args,
+        cwd: options.cwd,
+      });
       return results[calls.length - 1];
     },
   };
 }
 
-const passed = { status: 0, stdout: 'ok', stderr: '' };
-const failed = { status: 1, stdout: 'diagnostic', stderr: 'failure detail' };
+const passed = {
+  status: 0,
+  stdout: 'ok',
+  stderr: '',
+};
+const failed = {
+  status: 1,
+  stdout: 'diagnostic',
+  stderr: 'failure detail',
+};
 
 describe('Codex Stop quality checks', () => {
   it('allows completion only after both commands succeed in the project root', () => {
     const commands = runner([passed, passed]);
     expect(runQualityChecks('/project', false, commands.run)).toEqual({});
     expect(commands.calls).toEqual([
-      { command: 'npm', args: ['run', 'format:check'], cwd: '/project' },
-      { command: 'npm', args: ['run', 'lint'], cwd: '/project' },
+      {
+        command: 'npm',
+        args: ['run', 'format:check'],
+        cwd: '/project',
+      },
+      {
+        command: 'npm',
+        args: ['run', 'lint'],
+        cwd: '/project',
+      },
     ]);
   });
 
@@ -43,8 +62,14 @@ describe('Codex Stop quality checks', () => {
 
   it('reports unavailable commands and timeouts as failures', () => {
     const commands = runner([
-      { status: null, error: new Error('spawn npm ENOENT') },
-      { status: null, error: new Error('ETIMEDOUT') },
+      {
+        status: null,
+        error: new Error('spawn npm ENOENT'),
+      },
+      {
+        status: null,
+        error: new Error('ETIMEDOUT'),
+      },
     ]);
     const result = runQualityChecks('/project', false, commands.run);
     expect(result.decision).toBe('block');

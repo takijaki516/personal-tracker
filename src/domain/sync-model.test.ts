@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-
 import { emptyDay, emptyStore, type Store } from './data';
 import {
   editDocument,
@@ -13,7 +12,19 @@ const date = '2026-09-15';
 function meal(id: string): Store {
   return {
     version: 1,
-    days: { [date]: { ...emptyDay(), meals: [{ id, name: id, calories: 100, slot: '점심' }] } },
+    days: {
+      [date]: {
+        ...emptyDay(),
+        meals: [
+          {
+            id,
+            name: id,
+            calories: 100,
+            slot: '점심',
+          },
+        ],
+      },
+    },
   };
 }
 describe('record synchronization', () => {
@@ -35,7 +46,10 @@ describe('record synchronization', () => {
   });
   it('converges for concurrent changes to the same record and favors a later observed edit', () => {
     const a = migrateStore(meal('x'), 'a');
-    const b = { ...a, device: 'b' };
+    const b = {
+      ...a,
+      device: 'b',
+    };
     const s1 = meal('x');
     s1.days[date].meals[0].calories = 200;
     const s2 = meal('x');
@@ -69,7 +83,10 @@ describe('record synchronization', () => {
       '올바르지 않은 동기화 기록입니다.',
     );
     Object.values(invalid.entries)[0].counter = 0;
-    Object.values(invalid.entries)[0].value = { id: 'a', calories: -1 };
+    Object.values(invalid.entries)[0].value = {
+      id: 'a',
+      calories: -1,
+    };
     expect(() => parseDocument(JSON.stringify(invalid))).toThrow('식단 기록을 확인해 주세요.');
   });
 });

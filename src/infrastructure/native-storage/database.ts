@@ -1,5 +1,4 @@
 import * as SQLite from 'expo-sqlite';
-
 import { parseDocument, type SyncDocument } from '../../domain/sync-model';
 
 let database: Promise<SQLite.SQLiteDatabase> | undefined;
@@ -48,7 +47,12 @@ export async function loadDocument() {
     await db()
   ).getAllAsync<{ key: string; value: string }>('SELECT key,value FROM entries');
   const entries = Object.fromEntries(rows.map((row) => [row.key, JSON.parse(row.value)]));
-  return parseDocument(JSON.stringify({ ...metadata, entries }));
+  return parseDocument(
+    JSON.stringify({
+      ...metadata,
+      entries,
+    }),
+  );
 }
 
 export async function commitDocument(doc: SyncDocument) {
@@ -58,7 +62,11 @@ export async function commitDocument(doc: SyncDocument) {
     await tx.runAsync(
       'INSERT OR REPLACE INTO metadata(key,value) VALUES (?,?)',
       'document',
-      JSON.stringify({ schema: doc.schema, device: doc.device, clock: doc.clock }),
+      JSON.stringify({
+        schema: doc.schema,
+        device: doc.device,
+        clock: doc.clock,
+      }),
     );
     for (const [key, value] of Object.entries(doc.entries)) {
       await tx.runAsync(

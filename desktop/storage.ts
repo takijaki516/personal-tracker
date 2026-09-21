@@ -10,15 +10,20 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-
 import { createEngine } from '../src/application/local-engine';
 import { parseStore } from '../src/domain/data';
 import { parseDocument } from '../src/domain/sync-model';
 
 export function openStorage(directory: string) {
-  mkdirSync(directory, { recursive: true, mode: 0o700 });
+  mkdirSync(directory, {
+    recursive: true,
+    mode: 0o700,
+  });
   const backupPath = join(directory, 'backups');
-  mkdirSync(backupPath, { recursive: true, mode: 0o700 });
+  mkdirSync(backupPath, {
+    recursive: true,
+    mode: 0o700,
+  });
   const db = new DatabaseSync(join(directory, 'exercise.sqlite'));
   db.exec(
     'PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS entries (key TEXT PRIMARY KEY, value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);',
@@ -45,14 +50,23 @@ export function openStorage(directory: string) {
           (row) => [row.key, JSON.parse(row.value)],
         ),
       );
-      return parseDocument(JSON.stringify({ ...JSON.parse(raw), entries }));
+      return parseDocument(
+        JSON.stringify({
+          ...JSON.parse(raw),
+          entries,
+        }),
+      );
     },
     commit: async (doc) => {
       db.exec('BEGIN IMMEDIATE');
       try {
         set(
           'document',
-          JSON.stringify({ schema: doc.schema, device: doc.device, clock: doc.clock }),
+          JSON.stringify({
+            schema: doc.schema,
+            device: doc.device,
+            clock: doc.clock,
+          }),
         );
         const statement = db.prepare('INSERT OR REPLACE INTO entries(key,value) VALUES (?,?)');
         for (const [key, value] of Object.entries(doc.entries)) {
@@ -92,5 +106,13 @@ export function openStorage(directory: string) {
     parseStore(raw);
     return raw;
   };
-  return { engine, backupPath, backups, backupRead, get, set, close: () => db.close() };
+  return {
+    engine,
+    backupPath,
+    backups,
+    backupRead,
+    get,
+    set,
+    close: () => db.close(),
+  };
 }

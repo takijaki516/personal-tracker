@@ -1,7 +1,6 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-
 import { engine } from './native-storage';
 
 export const readStored = engine.read;

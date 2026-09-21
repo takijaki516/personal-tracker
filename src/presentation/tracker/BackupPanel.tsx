@@ -1,5 +1,4 @@
 import { Text, View } from 'react-native';
-
 import Button from './Button';
 import { styles as s } from './styles';
 

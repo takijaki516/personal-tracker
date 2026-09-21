@@ -1,6 +1,5 @@
 import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
-
 import { getConnectionInfo, maintenance, syncNow } from './services';
 const TASK = 'exercise-backup-and-sync';
 TaskManager.defineTask(TASK, async () => {

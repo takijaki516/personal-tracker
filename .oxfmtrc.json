@@ -7,8 +7,25 @@
   "jsxSingleQuote": false,
   "semi": true,
   "trailingComma": "all",
+  "arrowParens": "always",
+  "bracketSpacing": true,
+  "bracketSameLine": false,
   "endOfLine": "lf",
-  "sortImports": { "sortSideEffects": false },
+  "quoteProps": "as-needed",
+  "sortImports": {
+    "order": "asc",
+    "ignoreCase": true,
+    "newlinesBetween": false,
+    "sortSideEffects": false,
+    "groups": [
+      ["side_effect", "side_effect_style"],
+      "builtin",
+      "external",
+      ["internal", "subpath"],
+      ["parent", "sibling", "index"],
+      "unknown"
+    ]
+  },
   "sortPackageJson": false,
   "ignorePatterns": [
     "node_modules/**",

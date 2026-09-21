@@ -28,8 +28,19 @@ export default function PairScanner({ onScan }: { onScan: (code: string) => void
       </Pressable>
       {!!error && <Text>{error}</Text>}
       <Modal visible={open} onRequestClose={() => setOpen(false)} animationType="slide">
-        <View style={{ flex: 1, backgroundColor: '#000', paddingTop: 50 }}>
-          <Text style={{ color: '#fff', padding: 20 }}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: '#000',
+            paddingTop: 50,
+          }}
+        >
+          <Text
+            style={{
+              color: '#fff',
+              padding: 20,
+            }}
+          >
             Mac의 ‘기기 연결’에 표시된 QR 코드를 비춰 주세요.
           </Text>
           {open && (

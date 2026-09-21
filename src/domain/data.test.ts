@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-
 import { emptyStore, isDate, localDate, parseStore, shiftDate } from './data';
 describe('backup validation', () => {
   it('round trips complete records', () => {
@@ -8,8 +7,22 @@ describe('backup validation', () => {
       days: {
         '2026-09-14': {
           weight: 72.3,
-          meals: [{ id: 'a', name: '밥', slot: '점심', calories: 500 }],
-          workouts: [{ id: 'b', name: '산책', minutes: 30, note: '' }],
+          meals: [
+            {
+              id: 'a',
+              name: '밥',
+              slot: '점심',
+              calories: 500,
+            },
+          ],
+          workouts: [
+            {
+              id: 'b',
+              name: '산책',
+              minutes: 30,
+              note: '',
+            },
+          ],
         },
       },
     };
@@ -19,15 +32,43 @@ describe('backup validation', () => {
   it.each([
     null,
     {},
-    { version: 2, days: {} },
-    { version: 1, days: { '2026-02-30': { weight: null, meals: [], workouts: [] } } },
-    { version: 1, days: { '2026-09-14': { weight: -1, meals: [], workouts: [] } } },
+    {
+      version: 2,
+      days: {},
+    },
+    {
+      version: 1,
+      days: {
+        '2026-02-30': {
+          weight: null,
+          meals: [],
+          workouts: [],
+        },
+      },
+    },
+    {
+      version: 1,
+      days: {
+        '2026-09-14': {
+          weight: -1,
+          meals: [],
+          workouts: [],
+        },
+      },
+    },
     {
       version: 1,
       days: {
         '2026-09-14': {
           weight: null,
-          meals: [{ id: 'a', name: '밥', slot: '점심', calories: '500' }],
+          meals: [
+            {
+              id: 'a',
+              name: '밥',
+              slot: '점심',
+              calories: '500',
+            },
+          ],
           workouts: [],
         },
       },

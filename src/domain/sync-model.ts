@@ -8,12 +8,14 @@ export type Entry = {
   counter: number;
   device: string;
 };
+
 export type SyncDocument = {
   schema: 1;
   device: string;
   clock: number;
   entries: Record<string, Entry>;
 };
+
 export const entryKey = (e: Pick<Entry, 'date' | 'kind' | 'id'>) =>
   JSON.stringify([e.date, e.kind, e.id]);
 export const newDocument = (device: string): SyncDocument => ({
@@ -109,12 +111,22 @@ function flatten(store: Store): Record<string, Omit<Entry, 'counter' | 'device'>
       ['workout', day.workouts],
     ] as const) {
       for (const value of values) {
-        const e = { date, kind, id: value.id, value };
+        const e = {
+          date,
+          kind,
+          id: value.id,
+          value,
+        };
         result[entryKey(e)] = e;
       }
     }
     if (day.weight !== null) {
-      const e = { date, kind: 'weight' as const, id: 'weight', value: day.weight };
+      const e = {
+        date,
+        kind: 'weight' as const,
+        id: 'weight',
+        value: day.weight,
+      };
       result[entryKey(e)] = e;
     }
   }
@@ -126,13 +138,23 @@ export function editDocument(doc: SyncDocument, before: Store, after: Store): Sy
   parseStore(JSON.stringify(after));
   const a = flatten(before),
     b = flatten(after);
-  const next = { ...doc, entries: { ...doc.entries } };
+  const next = {
+    ...doc,
+    entries: { ...doc.entries },
+  };
   for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) {
     if (JSON.stringify(a[key]?.value) === JSON.stringify(b[key]?.value)) {
       continue;
     }
-    const e = b[key] ?? { ...a[key], value: null };
-    next.entries[key] = { ...e, counter: ++next.clock, device: doc.device };
+    const e = b[key] ?? {
+      ...a[key],
+      value: null,
+    };
+    next.entries[key] = {
+      ...e,
+      counter: ++next.clock,
+      device: doc.device,
+    };
   }
   return parseDocument(JSON.stringify(next));
 }
@@ -160,7 +182,21 @@ export function mergeDocuments(local: SyncDocument, remote: SyncDocument): SyncD
 export function migrateStore(store: Store, device: string): SyncDocument {
   // Deterministic initial versions avoid duplicating legacy records on first pairing.
   const entries = Object.fromEntries(
-    Object.entries(flatten(store)).map(([key, e]) => [key, { ...e, counter: 0, device: 'legacy' }]),
+    Object.entries(flatten(store)).map(([key, e]) => [
+      key,
+      {
+        ...e,
+        counter: 0,
+        device: 'legacy',
+      },
+    ]),
   );
-  return parseDocument(JSON.stringify({ schema: 1, device, clock: 0, entries }));
+  return parseDocument(
+    JSON.stringify({
+      schema: 1,
+      device,
+      clock: 0,
+      entries,
+    }),
+  );
 }

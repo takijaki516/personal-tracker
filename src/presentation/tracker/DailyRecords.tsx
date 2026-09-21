@@ -1,11 +1,11 @@
 import { Text, View } from 'react-native';
-
 import type { Day } from '../../domain/data';
 import Button from './Button';
 import type { RecordKind } from './RecordEditor';
 import { styles as s } from './styles';
 
 export type RecordTab = '전체' | '식단' | '운동';
+
 type Props = {
   day: Day;
   tab: RecordTab;

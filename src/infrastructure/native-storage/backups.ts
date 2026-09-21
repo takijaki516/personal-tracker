@@ -1,6 +1,5 @@
 import * as Crypto from 'expo-crypto';
 import { Directory, File, Paths } from 'expo-file-system';
-
 import { parseStore } from '../../domain/data';
 
 export const backupDirectory = () => new Directory(Paths.document, 'backups');
@@ -31,7 +30,10 @@ export async function readBackupFile(name: string) {
 
 export async function writeBackup(day: string, raw: string, reason?: string) {
   const dir = backupDirectory();
-  dir.create({ idempotent: true, intermediates: true });
+  dir.create({
+    idempotent: true,
+    intermediates: true,
+  });
   const target = new File(dir, `운동관리-${day}${reason ? `-${reason}` : ''}.json`);
   if (target.exists) {
     return;

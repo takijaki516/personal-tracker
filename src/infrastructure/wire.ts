@@ -2,6 +2,7 @@ import { fromByteArray, toByteArray } from 'base64-js';
 import nacl from 'tweetnacl';
 
 export type Pairing = { host: string; port: number; key: string };
+
 export function parsePairing(text: string): Pairing {
   const match = /^exercise:\/\/([0-9.]+):(\d+)#([A-Za-z0-9+/=]+)$/.exec(text.trim());
   if (!match) {
@@ -18,7 +19,11 @@ export function parsePairing(text: string): Pairing {
   if (!local || +port < 1024 || +port > 65535 || toByteArray(key).length !== 32) {
     throw new Error('올바른 로컬 네트워크 연결 코드가 아닙니다.');
   }
-  return { host, port: +port, key };
+  return {
+    host,
+    port: +port,
+    key,
+  };
 }
 export const pairingText = (p: Pairing) => `exercise://${p.host}:${p.port}#${p.key}`;
 export const encodeBytes = fromByteArray;
@@ -60,5 +65,8 @@ export function unseal(
   if (!isRecord(value)) {
     throw new Error('올바르지 않은 동기화 메시지입니다.');
   }
-  return { value, nonce: envelope.nonce };
+  return {
+    value,
+    nonce: envelope.nonce,
+  };
 }

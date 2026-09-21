@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Modal, Text, View } from 'react-native';
-
 import { isDate } from '../../domain/data';
 import Button from './Button';
 import Field from './Field';
@@ -29,7 +28,15 @@ export default function DatePicker({
             maxLength={10}
           />
           {!!formError && <Text style={s.error}>{formError}</Text>}
-          <View style={[s.row, { justifyContent: 'flex-end', marginTop: 20 }]}>
+          <View
+            style={[
+              s.row,
+              {
+                justifyContent: 'flex-end',
+                marginTop: 20,
+              },
+            ]}
+          >
             <Button label="취소" onPress={() => onClose()} />
             <Button
               label="이동"

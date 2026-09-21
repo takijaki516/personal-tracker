@@ -1,7 +1,6 @@
 import * as Crypto from 'expo-crypto';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, Text, View } from 'react-native';
-
 import type { Day } from '../../domain/data';
 import Button from './Button';
 import Field from './Field';
@@ -9,7 +8,9 @@ import { styles as s } from './styles';
 import type { SaveResult } from './useTrackerRecords';
 
 export type RecordKind = 'meal' | 'workout' | 'weight';
+
 export type Editor = { kind: RecordKind; id: string | null; date: string };
+
 type Props = {
   editor: Editor;
   day: Day;
@@ -19,14 +20,24 @@ type Props = {
 };
 
 const fields = {
-  meal: { title: '식단', amountLabel: '칼로리 (kcal)', max: 20000, range: '칼로리 0~20,000' },
+  meal: {
+    title: '식단',
+    amountLabel: '칼로리 (kcal)',
+    max: 20000,
+    range: '칼로리 0~20,000',
+  },
   workout: {
     title: '운동',
     amountLabel: '운동 시간 (분)',
     max: 1440,
     range: '운동 시간 0.1~1,440분',
   },
-  weight: { title: '체중', amountLabel: '체중 (kg)', max: 500, range: '체중 0.1~500kg' },
+  weight: {
+    title: '체중',
+    amountLabel: '체중 (kg)',
+    max: 500,
+    range: '체중 0.1~500kg',
+  },
 };
 
 export default function RecordEditor({ editor, day, busy, onSave, onClose }: Props) {
@@ -66,7 +77,12 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
       next.weight = n;
     }
     if (editor.kind === 'meal') {
-      const item = { id: editor.id ?? Crypto.randomUUID(), name: name.trim(), calories: n, slot };
+      const item = {
+        id: editor.id ?? Crypto.randomUUID(),
+        name: name.trim(),
+        calories: n,
+        slot,
+      };
       next.meals = editor.id
         ? current.meals.map((m) => (m.id === editor.id ? item : m))
         : [...current.meals, item];
@@ -101,7 +117,15 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
             <Text style={s.sectionTitle}>{field.title} 기록</Text>
             <Text style={s.caption}>{editor.date}</Text>
             {editor.kind === 'meal' && (
-              <View style={[s.row, { marginTop: 15, flexWrap: 'wrap' }]}>
+              <View
+                style={[
+                  s.row,
+                  {
+                    marginTop: 15,
+                    flexWrap: 'wrap',
+                  },
+                ]}
+              >
                 {['아침', '점심', '저녁', '간식'].map((t) => (
                   <Button key={t} label={t} selected={slot === t} onPress={() => setSlot(t)} />
                 ))}
@@ -135,7 +159,15 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
                 {formError}
               </Text>
             )}
-            <View style={[s.row, { justifyContent: 'flex-end', marginTop: 24 }]}>
+            <View
+              style={[
+                s.row,
+                {
+                  justifyContent: 'flex-end',
+                  marginTop: 24,
+                },
+              ]}
+            >
               <Button label="취소" disabled={busy} onPress={() => onClose()} />
               <Button
                 label={busy ? '저장 중…' : '기록 저장'}

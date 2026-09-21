@@ -14,7 +14,10 @@ export function runQualityChecks(root, stopHookActive, run = spawnSync) {
       encoding: 'utf8',
       timeout: 45000,
       maxBuffer: 1024 * 1024,
-      env: { ...process.env, NO_COLOR: '1' },
+      env: {
+        ...process.env,
+        NO_COLOR: '1',
+      },
     });
     if (result.status !== 0 || result.error) {
       const output = [result.error?.message, result.stdout, result.stderr]
@@ -41,7 +44,10 @@ export function runQualityChecks(root, stopHookActive, run = spawnSync) {
       systemMessage: `${reason}\n\n자동 재시도 후에도 실패했습니다. 완료 또는 검사 통과로 보고하지 말고 남은 실패를 설명하세요.`,
     };
   }
-  return { decision: 'block', reason };
+  return {
+    decision: 'block',
+    reason,
+  };
 }
 
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {

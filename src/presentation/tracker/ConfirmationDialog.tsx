@@ -1,9 +1,9 @@
 import { Modal, Text, View } from 'react-native';
-
 import Button from './Button';
 import { styles as s } from './styles';
 
 export type Confirmation = { title: string; description: string; run: () => Promise<boolean> };
+
 type Props = { confirmation: Confirmation; busy: boolean; message: string; onClose: () => void };
 
 export default function ConfirmationDialog({ confirmation, busy, message, onClose }: Props) {

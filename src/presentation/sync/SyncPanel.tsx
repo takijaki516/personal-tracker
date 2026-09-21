@@ -1,7 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AppState, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
-
 import { registerBackground } from '../../infrastructure/background';
 import type { BackupInfo, ConnectionInfo } from '../../infrastructure/desktop-bridge';
 import { exportBackup } from '../../infrastructure/platform';
@@ -205,7 +204,13 @@ export default function SyncPanel({
                     있으니 다른 사람에게 공유하지 마세요.
                   </Text>
                   {info.codes.map((value) => (
-                    <View key={value} style={{ gap: 12, marginTop: 12 }}>
+                    <View
+                      key={value}
+                      style={{
+                        gap: 12,
+                        marginTop: 12,
+                      }}
+                    >
                       <QRCode value={value} size={180} />
                       <Text selectable style={s.text}>
                         {value}
@@ -317,13 +322,43 @@ const s = StyleSheet.create({
     backgroundColor: '#fff',
     gap: 10,
   },
-  title: { fontSize: 16, fontWeight: '600', color: '#2f4536' },
-  text: { fontSize: 13, lineHeight: 22, color: '#52654b' },
-  small: { fontSize: 11, lineHeight: 19, color: '#6e7c65' },
-  row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
-  button: { padding: 12, minHeight: 44, backgroundColor: '#eaf0df', borderRadius: 8 },
-  buttonText: { color: '#245d48', fontSize: 12 },
-  box: { backgroundColor: '#f6f7f2', padding: 16, borderRadius: 12, gap: 12 },
+  title: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2f4536',
+  },
+  text: {
+    fontSize: 13,
+    lineHeight: 22,
+    color: '#52654b',
+  },
+  small: {
+    fontSize: 11,
+    lineHeight: 19,
+    color: '#6e7c65',
+  },
+  row: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 8,
+  },
+  button: {
+    padding: 12,
+    minHeight: 44,
+    backgroundColor: '#eaf0df',
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: '#245d48',
+    fontSize: 12,
+  },
+  box: {
+    backgroundColor: '#f6f7f2',
+    padding: 16,
+    borderRadius: 12,
+    gap: 12,
+  },
   input: {
     minHeight: 60,
     padding: 12,

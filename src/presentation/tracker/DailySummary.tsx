@@ -1,5 +1,4 @@
 import { Text, View } from 'react-native';
-
 import type { Day } from '../../domain/data';
 import { styles as s } from './styles';
 

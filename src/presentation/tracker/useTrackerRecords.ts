@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-
 import { loadRecords, saveRecords } from '../../application/record-repository';
 import { emptyStore, type Day, type Store } from '../../domain/data';
 import { readStored, writeStored } from '../../infrastructure/platform';
 import { restoreStored } from '../../infrastructure/services';
 
-const storage = { read: readStored, write: writeStored };
+const storage = {
+  read: readStored,
+  write: writeStored,
+};
+
 export type SaveResult = { ok: boolean; error?: string };
+
 export const errorText = (error: unknown) =>
   error instanceof Error ? error.message : '작업을 완료하지 못했습니다.';
 
@@ -69,7 +73,10 @@ export function useTrackerRecords() {
     } catch (error) {
       const text = `저장하지 못했습니다. ${errorText(error)}`;
       setMessage(text);
-      return { ok: false, error: text };
+      return {
+        ok: false,
+        error: text,
+      };
     } finally {
       saving.current = false;
       setBusy(false);
@@ -77,7 +84,13 @@ export function useTrackerRecords() {
   }
 
   function updateDay(next: Day, target: string) {
-    return persist({ ...data, days: { ...data.days, [target]: next } });
+    return persist({
+      ...data,
+      days: {
+        ...data.days,
+        [target]: next,
+      },
+    });
   }
 
   async function refresh() {
@@ -90,5 +103,15 @@ export function useTrackerRecords() {
     }
   }
 
-  return { data, loaded, blocked, busy, message, setMessage, updateDay, persist, refresh };
+  return {
+    data,
+    loaded,
+    blocked,
+    busy,
+    message,
+    setMessage,
+    updateDay,
+    persist,
+    refresh,
+  };
 }

@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
-
 import type { LocalAdapter } from '../../application/local-engine';
 import { STORAGE_KEY } from '../../domain/data';
 import { writeBackup } from './backups';

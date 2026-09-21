@@ -1,5 +1,4 @@
 import { Text, TextInput, View } from 'react-native';
-
 import { styles as s } from './styles';
 
 export default function Field({
@@ -27,7 +26,13 @@ export default function Field({
         keyboardType={numeric ? 'decimal-pad' : 'default'}
         multiline={multiline}
         maxLength={maxLength}
-        style={[s.input, multiline && { minHeight: 86, textAlignVertical: 'top' }]}
+        style={[
+          s.input,
+          multiline && {
+            minHeight: 86,
+            textAlignVertical: 'top',
+          },
+        ]}
       />
     </View>
   );

@@ -1,10 +1,21 @@
 export type Meal = { id: string; name: string; slot: string; calories: number };
+
 export type Workout = { id: string; name: string; minutes: number; note: string };
+
 export type Day = { meals: Meal[]; workouts: Workout[]; weight: number | null };
+
 export type Store = { version: 1; days: Record<string, Day> };
+
 export const STORAGE_KEY = 'harugyeol.v1';
-export const emptyDay = (): Day => ({ meals: [], workouts: [], weight: null });
-export const emptyStore = (): Store => ({ version: 1, days: {} });
+export const emptyDay = (): Day => ({
+  meals: [],
+  workouts: [],
+  weight: null,
+});
+export const emptyStore = (): Store => ({
+  version: 1,
+  days: {},
+});
 export function localDate(date = new Date()): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }

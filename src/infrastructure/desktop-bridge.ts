@@ -6,7 +6,9 @@ export type ConnectionInfo = {
   backupPath: string;
   note?: string;
 };
+
 export type BackupInfo = { name: string };
+
 export type DesktopBridge = {
   read(): Promise<string>;
   write(raw: string, base?: string): Promise<void>;
@@ -20,6 +22,7 @@ export type DesktopBridge = {
   export(raw: string, name: string): Promise<void>;
   import(): Promise<string | null>;
 };
+
 declare global {
   interface Window {
     exerciseDesktop?: DesktopBridge;

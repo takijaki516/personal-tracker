@@ -8,7 +8,6 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { emptyDay, localDate, parseStore } from '../../domain/data';
 import { exportBackup, importBackup } from '../../infrastructure/platform';
 import SyncPanel from '../sync/SyncPanel';
@@ -36,7 +35,11 @@ export default function TrackerScreen() {
   const day = data.days[date] ?? emptyDay();
 
   function openEditor(kind: RecordKind, id: string | null = null) {
-    setEditor({ kind, id, date });
+    setEditor({
+      kind,
+      id,
+      date,
+    });
   }
 
   function remove(kind: 'meals' | 'workouts', id: string) {
@@ -44,7 +47,15 @@ export default function TrackerScreen() {
       title: '기록 삭제',
       description: '선택한 기록을 삭제할까요? 삭제 후에는 백업 파일이 있어야 복원할 수 있어요.',
       run: async () =>
-        (await updateDay({ ...day, [kind]: day[kind].filter((item) => item.id !== id) }, date)).ok,
+        (
+          await updateDay(
+            {
+              ...day,
+              [kind]: day[kind].filter((item) => item.id !== id),
+            },
+            date,
+          )
+        ).ok,
     });
   }
 
@@ -52,7 +63,16 @@ export default function TrackerScreen() {
     setConfirmation({
       title: '체중 삭제',
       description: `${date}의 체중 기록을 삭제할까요?`,
-      run: async () => (await updateDay({ ...day, weight: null }, date)).ok,
+      run: async () =>
+        (
+          await updateDay(
+            {
+              ...day,
+              weight: null,
+            },
+            date,
+          )
+        ).ok,
     });
   }
   async function backup() {
@@ -122,7 +142,12 @@ export default function TrackerScreen() {
           )}
           <DailySummary day={day} wide={wide} />
           <View style={[s.columns, wide && { flexDirection: 'row' }]}>
-            <View style={{ flex: wide ? 1.4 : undefined, gap: 16 }}>
+            <View
+              style={{
+                flex: wide ? 1.4 : undefined,
+                gap: 16,
+              }}
+            >
               <DailyRecords
                 day={day}
                 tab={tab}
@@ -132,7 +157,12 @@ export default function TrackerScreen() {
                 onRemove={remove}
               />
             </View>
-            <View style={{ flex: wide ? 1 : undefined, gap: 16 }}>
+            <View
+              style={{
+                flex: wide ? 1 : undefined,
+                gap: 16,
+              }}
+            >
               <WeightPanel
                 days={data.days}
                 date={date}

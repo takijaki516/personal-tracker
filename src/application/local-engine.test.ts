@@ -1,9 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
-
 import { emptyDay, emptyStore } from '../domain/data';
 import type { SyncDocument } from '../domain/sync-model';
 import { createEngine, type LocalAdapter } from './local-engine';
-const data = { version: 1 as const, days: { '2026-09-15': { ...emptyDay(), weight: 70 } } };
+const data = {
+  version: 1 as const,
+  days: {
+    '2026-09-15': {
+      ...emptyDay(),
+      weight: 70,
+    },
+  },
+};
 function fixture(raw: string | null = null) {
   let doc: SyncDocument | null = null;
   const backup = vi.fn<LocalAdapter['backup']>(async () => {});
@@ -17,7 +24,12 @@ function fixture(raw: string | null = null) {
     backup,
     uuid: () => 'test-device',
   };
-  return { engine: createEngine(adapter), backup, commit, adapter };
+  return {
+    engine: createEngine(adapter),
+    backup,
+    commit,
+    adapter,
+  };
 }
 describe('local persistence and backups', () => {
   it('backs up legacy data before committing migration', async () => {
