@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { localDate, shiftDate } from '../../domain/data';
 import Button from './Button';
+import { formatDateWithWeekday } from './calendar';
 import DatePicker from './DatePicker';
 import { styles as s } from './styles';
 
@@ -19,7 +20,7 @@ export default function DateNavigation({
         <View style={s.row}>
           <Button label="‹ 이전" onPress={() => onDateChange(shiftDate(date, -1))} />
           <Button
-            label={date}
+            label={formatDateWithWeekday(date)}
             onPress={() => {
               setDateOpen(true);
             }}

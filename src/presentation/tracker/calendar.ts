@@ -1,5 +1,12 @@
 import { localDate } from '../../domain/data';
 
+const weekdays = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+
+export function formatDateWithWeekday(date: string): string {
+  const weekday = weekdays[new Date(`${date}T12:00:00`).getDay()];
+  return `${date}(${weekday})`;
+}
+
 export function calendarDates(month: string): (string | null)[] {
   const [year, monthNumber] = month.split('-').map(Number);
   const firstWeekday = new Date(`${month}-01T12:00:00`).getDay();
