@@ -60,6 +60,9 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 8,
   },
+  recordDateTitle: {
+    fontSize: 12,
+  },
   datebar: {
     flexDirection: 'row',
     flexWrap: 'wrap',

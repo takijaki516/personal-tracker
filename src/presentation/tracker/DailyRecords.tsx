@@ -1,82 +1,69 @@
 import { Text, View } from 'react-native';
 import type { Day } from '../../domain/data';
 import Button from './Button';
+import { formatDateWithWeekday } from './calendar';
 import type { RecordKind } from './RecordEditor';
 import { styles as s } from './styles';
 
-export type RecordTab = '전체' | '식단' | '운동';
-
 type Props = {
+  date: string;
   day: Day;
-  tab: RecordTab;
   locked: boolean;
-  onTabChange: (tab: RecordTab) => void;
   onEdit: (kind: RecordKind, id?: string) => void;
   onRemove: (kind: 'meals' | 'workouts', id: string) => void;
 };
 
-export default function DailyRecords({ day, tab, locked, onTabChange, onEdit, onRemove }: Props) {
+export default function DailyRecords({ date, day, locked, onEdit, onRemove }: Props) {
   return (
     <>
-      <View style={s.between}>
-        <Text style={s.sectionTitle}>하루의 기록</Text>
-        <View style={s.row}>
-          {(['전체', '식단', '운동'] as const).map((t) => (
-            <Button key={t} label={t} selected={t === tab} onPress={() => onTabChange(t)} />
-          ))}
+      <Text style={[s.sectionTitle, s.recordDateTitle]}>{formatDateWithWeekday(date)}</Text>
+      <View style={s.card}>
+        <View style={s.between}>
+          <Text style={s.sectionTitle}>식단</Text>
+          <Button label="＋ 식단 추가" disabled={locked} onPress={() => onEdit('meal')} />
         </View>
+        {!day.meals.length ? (
+          <View style={s.empty}>
+            <Text style={s.caption}>기록이 없습니다.</Text>
+          </View>
+        ) : (
+          day.meals.map((m) => (
+            <View style={s.record} key={m.id}>
+              <Text style={s.tag}>{m.slot}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={s.body}>{m.name}</Text>
+                <Text style={s.caption}>{m.calories} kcal</Text>
+              </View>
+              <Button label="수정" disabled={locked} onPress={() => onEdit('meal', m.id)} />
+              <Button label="삭제" disabled={locked} onPress={() => onRemove('meals', m.id)} />
+            </View>
+          ))
+        )}
       </View>
-      {tab !== '운동' && (
-        <View style={s.card}>
-          <View style={s.between}>
-            <Text style={s.sectionTitle}>식단</Text>
-            <Button label="＋ 식단 추가" disabled={locked} onPress={() => onEdit('meal')} />
-          </View>
-          {!day.meals.length ? (
-            <View style={s.empty}>
-              <Text style={s.caption}>기록이 없습니다.</Text>
-            </View>
-          ) : (
-            day.meals.map((m) => (
-              <View style={s.record} key={m.id}>
-                <Text style={s.tag}>{m.slot}</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.body}>{m.name}</Text>
-                  <Text style={s.caption}>{m.calories} kcal</Text>
-                </View>
-                <Button label="수정" disabled={locked} onPress={() => onEdit('meal', m.id)} />
-                <Button label="삭제" disabled={locked} onPress={() => onRemove('meals', m.id)} />
-              </View>
-            ))
-          )}
+      <View style={s.card}>
+        <View style={s.between}>
+          <Text style={s.sectionTitle}>운동</Text>
+          <Button label="＋ 운동 추가" disabled={locked} onPress={() => onEdit('workout')} />
         </View>
-      )}
-      {tab !== '식단' && (
-        <View style={s.card}>
-          <View style={s.between}>
-            <Text style={s.sectionTitle}>운동</Text>
-            <Button label="＋ 운동 추가" disabled={locked} onPress={() => onEdit('workout')} />
+        {!day.workouts.length ? (
+          <View style={s.empty}>
+            <Text style={s.caption}>기록이 없습니다.</Text>
           </View>
-          {!day.workouts.length ? (
-            <View style={s.empty}>
-              <Text style={s.caption}>기록이 없습니다.</Text>
-            </View>
-          ) : (
-            day.workouts.map((w) => (
-              <View style={s.record} key={w.id}>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.body}>{w.name}</Text>
-                  <Text style={s.caption}>
-                    {w.minutes}분{w.note ? ` · ${w.note}` : ''}
-                  </Text>
-                </View>
-                <Button label="수정" disabled={locked} onPress={() => onEdit('workout', w.id)} />
-                <Button label="삭제" disabled={locked} onPress={() => onRemove('workouts', w.id)} />
+        ) : (
+          day.workouts.map((w) => (
+            <View style={s.record} key={w.id}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.body}>{w.name}</Text>
+                <Text style={s.caption}>
+                  {w.minutes}분{w.note ? ` · ${w.note}` : ''}
+                </Text>
               </View>
-            ))
-          )}
-        </View>
-      )}
+              <Button label="수정" disabled={locked} onPress={() => onEdit('workout', w.id)} />
+              <Button label="삭제" disabled={locked} onPress={() => onRemove('workouts', w.id)} />
+            </View>
+          ))
+        )}
+      </View>
     </>
   );
 }

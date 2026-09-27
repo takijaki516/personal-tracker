@@ -12,7 +12,7 @@ import { emptyDay, localDate } from '../../domain/data';
 import SyncPanel from '../sync/SyncPanel';
 import Button from './Button';
 import ConfirmationDialog, { type Confirmation } from './ConfirmationDialog';
-import DailyRecords, { type RecordTab } from './DailyRecords';
+import DailyRecords from './DailyRecords';
 import DateNavigation from './DateNavigation';
 import RecordEditor, { type Editor, type RecordKind } from './RecordEditor';
 import { styles as s } from './styles';
@@ -25,7 +25,6 @@ export default function TrackerScreen() {
   const { data, loaded, blocked, busy, message, setMessage, updateDay, refresh } =
     useTrackerRecords();
   const [date, setDate] = useState(localDate);
-  const [tab, setTab] = useState<RecordTab>('전체');
   const [editor, setEditor] = useState<Editor | null>(null);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const day = data.days[date] ?? emptyDay();
@@ -73,7 +72,6 @@ export default function TrackerScreen() {
           <TrackerSidebar
             onSelectToday={() => {
               setDate(localDate());
-              setTab('전체');
             }}
           />
         )}
@@ -93,10 +91,9 @@ export default function TrackerScreen() {
           )}
           <View style={s.columns}>
             <DailyRecords
+              date={date}
               day={day}
-              tab={tab}
               locked={locked}
-              onTabChange={setTab}
               onEdit={openEditor}
               onRemove={remove}
             />
