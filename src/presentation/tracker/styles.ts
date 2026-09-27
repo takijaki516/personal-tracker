@@ -65,8 +65,7 @@ export const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 26,
-    marginBottom: 20,
+    marginBottom: 12,
   },
   button: {
     paddingVertical: 12,
