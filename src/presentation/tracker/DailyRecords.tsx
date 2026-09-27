@@ -29,13 +29,12 @@ export default function DailyRecords({ day, tab, locked, onTabChange, onEdit, on
       {tab !== '운동' && (
         <View style={s.card}>
           <View style={s.between}>
-            <Text style={s.sectionTitle}>🍽 식단</Text>
+            <Text style={s.sectionTitle}>식단</Text>
             <Button label="＋ 식단 추가" disabled={locked} onPress={() => onEdit('meal')} />
           </View>
           {!day.meals.length ? (
             <View style={s.empty}>
-              <Text style={s.body}>오늘은 어떤 음식을 드셨나요?</Text>
-              <Text style={s.caption}>음식과 칼로리를 간단히 남겨보세요.</Text>
+              <Text style={s.caption}>기록이 없습니다.</Text>
             </View>
           ) : (
             day.meals.map((m) => (
@@ -55,13 +54,12 @@ export default function DailyRecords({ day, tab, locked, onTabChange, onEdit, on
       {tab !== '식단' && (
         <View style={s.card}>
           <View style={s.between}>
-            <Text style={s.sectionTitle}>↗ 운동</Text>
+            <Text style={s.sectionTitle}>운동</Text>
             <Button label="＋ 운동 추가" disabled={locked} onPress={() => onEdit('workout')} />
           </View>
           {!day.workouts.length ? (
             <View style={s.empty}>
-              <Text style={s.body}>가벼운 산책도 좋은 시작이에요.</Text>
-              <Text style={s.caption}>오늘 움직인 시간을 기록해 보세요.</Text>
+              <Text style={s.caption}>기록이 없습니다.</Text>
             </View>
           ) : (
             day.workouts.map((w) => (
