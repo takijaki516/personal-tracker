@@ -5,7 +5,6 @@ import { styles as s } from './styles';
 export default function TrackerSidebar({ onSelectToday }: { onSelectToday: () => void }) {
   return (
     <View style={s.sidebar}>
-      <Text style={s.brand}>▣ 운동관리</Text>
       <Text style={s.subtitle}>나를 돌보는 작은 기록</Text>
       <View style={{ marginTop: 40 }}>
         <Button label="◫ 나의 기록" selected onPress={onSelectToday} />

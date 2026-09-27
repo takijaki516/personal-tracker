@@ -99,12 +99,6 @@ export default function WeightPanel({
           <Button label="선택한 날짜의 체중 삭제" disabled={locked} onPress={onRemove} />
         )}
       </View>
-      <View style={s.gentle}>
-        <Text style={s.sectionTitle}>작은 기록, 나다운 루틴</Text>
-        <Text style={s.subtitle}>
-          완벽한 하루가 아니어도 괜찮아요.{'\n'}기록을 이어가는 것만으로 충분해요.
-        </Text>
-      </View>
     </>
   );
 }

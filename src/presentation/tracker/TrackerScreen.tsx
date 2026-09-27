@@ -8,25 +8,22 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { emptyDay, localDate, parseStore } from '../../domain/data';
-import { exportBackup, importBackup } from '../../infrastructure/platform';
+import { emptyDay, localDate } from '../../domain/data';
 import SyncPanel from '../sync/SyncPanel';
-import BackupPanel from './BackupPanel';
 import Button from './Button';
 import ConfirmationDialog, { type Confirmation } from './ConfirmationDialog';
 import DailyRecords, { type RecordTab } from './DailyRecords';
-import DailySummary from './DailySummary';
 import DateNavigation from './DateNavigation';
 import RecordEditor, { type Editor, type RecordKind } from './RecordEditor';
 import { styles as s } from './styles';
 import TrackerSidebar from './TrackerSidebar';
-import { errorText, useTrackerRecords } from './useTrackerRecords';
+import { useTrackerRecords } from './useTrackerRecords';
 import WeightPanel from './WeightPanel';
 
 export default function TrackerScreen() {
   const { width } = useWindowDimensions();
   const wide = width >= 950;
-  const { data, loaded, blocked, busy, message, setMessage, updateDay, persist, refresh } =
+  const { data, loaded, blocked, busy, message, setMessage, updateDay, refresh } =
     useTrackerRecords();
   const [date, setDate] = useState(localDate);
   const [tab, setTab] = useState<RecordTab>('전체');
@@ -75,29 +72,6 @@ export default function TrackerScreen() {
         ).ok,
     });
   }
-  async function backup() {
-    try {
-      await exportBackup(JSON.stringify(data, null, 2), `운동관리-${localDate()}.json`);
-    } catch (error) {
-      setMessage(errorText(error));
-    }
-  }
-  async function restore() {
-    try {
-      const raw = await importBackup();
-      if (raw === null) {
-        return;
-      }
-      const next = parseStore(raw);
-      setConfirmation({
-        title: '백업 복원',
-        description: `${Object.keys(next.days).length}일의 기록으로 이 기기의 전체 기록을 교체합니다. 먼저 현재 기록을 백업해 주세요.`,
-        run: async () => (await persist(next, true)).ok,
-      });
-    } catch (error) {
-      setMessage(errorText(error));
-    }
-  }
   if (!loaded) {
     return (
       <View style={s.loading}>
@@ -125,12 +99,6 @@ export default function TrackerScreen() {
           contentContainerStyle={[s.content, !wide && { padding: 20 }]}
           keyboardShouldPersistTaps="handled"
         >
-          {!wide && <Text style={[s.brand, { marginBottom: 28 }]}>▣ 운동관리</Text>}
-          <Text style={s.eyebrow}>MY DAILY JOURNAL</Text>
-          <Text accessibilityRole="header" style={s.title}>
-            오늘도, 나를 돌보는 하루
-          </Text>
-          <Text style={s.subtitle}>잘 먹고, 가볍게 움직이고, 조금씩 기록해요.</Text>
           <DateNavigation date={date} onDateChange={setDate} />
           {!!message && (
             <View style={s.notice}>
@@ -140,7 +108,6 @@ export default function TrackerScreen() {
               <Button label="닫기" onPress={() => setMessage('')} />
             </View>
           )}
-          <DailySummary day={day} wide={wide} />
           <View style={[s.columns, wide && { flexDirection: 'row' }]}>
             <View
               style={{
@@ -175,7 +142,6 @@ export default function TrackerScreen() {
             </View>
           </View>
           <SyncPanel disabled={locked || !!editor || !!confirmation} onChange={refresh} />
-          <BackupPanel locked={locked} busy={busy} onExport={backup} onRestore={restore} />
         </ScrollView>
       </View>
 

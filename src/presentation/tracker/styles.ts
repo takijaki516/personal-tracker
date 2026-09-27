@@ -23,11 +23,6 @@ export const styles = StyleSheet.create({
     borderColor: '#e2e7dd',
     backgroundColor: '#fbfcf8',
   },
-  brand: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#245d48',
-  },
   sidebarQuote: {
     fontSize: 19,
     lineHeight: 32,
@@ -47,13 +42,6 @@ export const styles = StyleSheet.create({
     letterSpacing: 2.5,
     color: '#788c69',
     fontWeight: '600',
-  },
-  title: {
-    fontSize: 27,
-    fontWeight: '700',
-    color: '#263a30',
-    marginTop: 14,
-    marginBottom: 12,
   },
   subtitle: {
     fontSize: 13,
@@ -116,25 +104,6 @@ export const styles = StyleSheet.create({
     lineHeight: 19,
     color: '#849078',
   },
-  stats: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 28,
-  },
-  stat: {
-    flex: 1,
-    padding: 22,
-    borderWidth: 1,
-    borderColor: '#e2e7dd',
-    borderRadius: 14,
-    backgroundColor: '#fff',
-  },
-  statValue: {
-    fontSize: 34,
-    fontWeight: '600',
-    color: '#263a30',
-    marginVertical: 19,
-  },
   unit: {
     fontSize: 13,
     fontWeight: '400',
@@ -180,18 +149,6 @@ export const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#263a30',
     marginTop: 22,
-  },
-  gentle: {
-    padding: 22,
-    backgroundColor: '#eaf0df',
-    borderRadius: 14,
-  },
-  footer: {
-    marginTop: 32,
-    paddingTop: 23,
-    borderTopWidth: 1,
-    borderColor: '#e2e7dd',
-    gap: 5,
   },
   overlay: {
     flex: 1,
