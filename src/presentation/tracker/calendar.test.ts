@@ -16,7 +16,7 @@ describe('month calendar', () => {
   });
 
   it('labels the selected date with its weekday', () => {
-    expect(formatDateWithWeekday('2026-09-28')).toBe('2026-09-28(월요일)');
-    expect(formatDateWithWeekday('2024-02-29')).toBe('2024-02-29(목요일)');
+    expect(formatDateWithWeekday('2026-09-28')).toBe('2026-09-28(월)');
+    expect(formatDateWithWeekday('2024-02-29')).toBe('2024-02-29(목)');
   });
 });
