@@ -1,6 +1,6 @@
 # 운동관리 — Android + macOS
 
-혼자 사용하는 식단·체중·운동 기록 앱입니다. Android와 Mac에 각각 SQLite로 저장하고, 같은 Wi-Fi에서 두 앱이 암호화된 JSON 데이터를 직접 주고받습니다. Supabase, 클라우드 계정, 로그인은 사용하지 않습니다.
+혼자 사용하는 식단·운동 기록 앱입니다. Android와 Mac에 각각 SQLite로 저장하고, 같은 Wi-Fi에서 두 앱이 암호화된 JSON 데이터를 직접 주고받습니다. Supabase, 클라우드 계정, 로그인은 사용하지 않습니다.
 
 - Android: Expo SDK 57 / React Native 0.86
 - macOS: 기존 React Native Web 화면을 사용하는 Electron 설치 앱
@@ -63,7 +63,7 @@ Mac은 TCP 47831 포트에서 수신합니다. macOS의 로컬 네트워크 권�
 - 앱의 기본 데이터는 각 기기의 `exercise.sqlite`에 저장합니다. 기록별로 entries 테이블에 저장하며, 수정·삭제 이력과 기기 정보를 함께 보존합니다.
 - Mac 데이터 폴더: `~/Library/Application Support/ExerciseTracker/`.
 - Android 데이터: 앱 내부 SQLite 디렉터리. 연결 정보와 기록은 분리합니다.
-- 서로 다른 식단·운동 항목과 날짜별 체중은 합칩니다. 같은 날 입력한 서로 다른 항목도 유지합니다.
+- 서로 다른 식단·운동 항목을 합칩니다. 같은 날 입력한 서로 다른 항목도 유지합니다.
 - 삭제는 삭제 이력을 남겨 오래 오프라인이던 기기에서 기록이 부활하지 않도록 합니다.
 - 같은 항목을 양쪽에서 동시에 수정하면 더 큰 논리 버전이 우선합니다. 같으면 기기 ID의 고정 순서로 결정합니다. 실제 시각상 마지막 편집을 항상 의미하지 않으며, 충돌 선택 UI는 없습니다.
 - Mac이 꺼져 있거나 절전 상태이면 각자 SQLite에 계속 기록하고 다음 연결에 합칩니다.
@@ -91,7 +91,8 @@ SQLite가 평소 사용하는 저장소이고 JSON은 복구·이동용 복사�
 - **동일한 Android 앱 저장 영역**의 기존 `harugyeol.v1` AsyncStorage 데이터는 최초 실행 시 검증하고, `before-migration` JSON 백업을 만든 뒤 SQLite로 옮깁니다. 기존 원본은 지우지 않습니다. 읽기/검증/백업 실패 시 이전을 중단합니다.
 - Expo Go와 독립 설치 앱은 저장 영역이 다릅니다. Expo Go에서 JSON을 내보내 독립 앱에서 복원하세요.
 - 기존 브라우저 기록은 브라우저에서 **백업 내보내기 → Mac 앱에서 백업 복원**으로 옮깁니다. Mac 설치 앱은 브라우저의 localStorage에 직접 접근하지 않습니다.
-- 기존 version 1 JSON 백업을 그대로 읽습니다. 복원은 전체 교체이므로 양쪽에 기록이 있다면 먼저 백업하세요.
+- 기존 version 1 JSON 백업을 읽을 때 체중 값은 제외하고 식단·운동 기록만 가져옵니다. 기존 동기화 기록의 체중 항목도 제거합니다. 복원은 전체 교체이므로 양쪽에 기록이 있다면 먼저 백업하세요.
+- 이전에 생성한 JSON 백업 파일과 AsyncStorage 원본은 자동으로 삭제하지 않으므로 체중 값이 남아 있을 수 있습니다.
 
 ## 검증
 
@@ -125,7 +126,7 @@ VS Code에서는 프로젝트 추천 확장인 [Oxc](https://marketplace.visuals
 - `src/domain/`: 기록 데이터 형식·검증과 동기화 병합 규칙
 - `src/application/`: 기록 저장 인터페이스와 저장·이전·백업·복원 유스케이스
 - `src/infrastructure/`: Android SQLite·파일, 브라우저 저장소, Electron 브리지, LAN 통신
-- `src/presentation/tracker/`: 기록 편집·날짜 선택·체중 표시 화면과 상태 관리
+- `src/presentation/tracker/`: 기록 편집·날짜 선택 화면과 상태 관리
 - `src/presentation/sync/`: 백업·기기 연결·동기화 화면
 - `App.tsx`, `src/presentation/tracker/TrackerScreen.tsx`: 앱 진입점과 최상위 기록 화면
 - `src/infrastructure/native-storage/`: Android SQLite, 백업 파일 및 엔진 어댑터

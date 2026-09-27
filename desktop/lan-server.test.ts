@@ -54,7 +54,14 @@ describe('encrypted local network transport', () => {
       days: {
         '2026-09-15': {
           ...emptyDay(),
-          weight: 65,
+          workouts: [
+            {
+              id: 'walk',
+              name: '산책',
+              minutes: 30,
+              note: '',
+            },
+          ],
         },
       },
     };

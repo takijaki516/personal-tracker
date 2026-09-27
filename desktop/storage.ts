@@ -10,7 +10,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { createEngine } from '../src/application/local-engine';
+import { createEngine, type LocalAdapter } from '../src/application/local-engine';
 import { parseStore } from '../src/domain/data';
 import { parseDocument } from '../src/domain/sync-model';
 
@@ -37,7 +37,7 @@ export function openStorage(directory: string) {
   const set = (key: string, value: string) => {
     db.prepare('INSERT OR REPLACE INTO metadata(key,value) VALUES (?,?)').run(key, value);
   };
-  const engine = createEngine({
+  const adapter: LocalAdapter = {
     uuid: randomUUID,
     legacy: async () => null,
     load: async () => {
@@ -50,12 +50,16 @@ export function openStorage(directory: string) {
           (row) => [row.key, JSON.parse(row.value)],
         ),
       );
-      return parseDocument(
+      const doc = parseDocument(
         JSON.stringify({
           ...JSON.parse(raw),
           entries,
         }),
       );
+      if (Object.keys(doc.entries).length !== Object.keys(entries).length) {
+        await adapter.commit(doc);
+      }
+      return doc;
     },
     commit: async (doc) => {
       db.exec('BEGIN IMMEDIATE');
@@ -72,6 +76,13 @@ export function openStorage(directory: string) {
         for (const [key, value] of Object.entries(doc.entries)) {
           statement.run(key, JSON.stringify(value));
         }
+        const keys = db.prepare('SELECT key FROM entries').all() as { key: string }[];
+        const remove = db.prepare('DELETE FROM entries WHERE key = ?');
+        for (const { key } of keys) {
+          if (!Object.hasOwn(doc.entries, key)) {
+            remove.run(key);
+          }
+        }
         db.exec('COMMIT');
       } catch (error) {
         db.exec('ROLLBACK');
@@ -87,7 +98,8 @@ export function openStorage(directory: string) {
       writeFileSync(temp, raw, { mode: 0o600 });
       renameSync(temp, target);
     },
-  });
+  };
+  const engine = createEngine(adapter);
   const backups = () =>
     readdirSync(backupPath)
       .filter((name) => name.endsWith('.json'))

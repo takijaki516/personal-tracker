@@ -47,12 +47,16 @@ export async function loadDocument() {
     await db()
   ).getAllAsync<{ key: string; value: string }>('SELECT key,value FROM entries');
   const entries = Object.fromEntries(rows.map((row) => [row.key, JSON.parse(row.value)]));
-  return parseDocument(
+  const doc = parseDocument(
     JSON.stringify({
       ...metadata,
       entries,
     }),
   );
+  if (Object.keys(doc.entries).length !== rows.length) {
+    await commitDocument(doc);
+  }
+  return doc;
 }
 
 export async function commitDocument(doc: SyncDocument) {
@@ -74,6 +78,12 @@ export async function commitDocument(doc: SyncDocument) {
         key,
         JSON.stringify(value),
       );
+    }
+    const keys = await tx.getAllAsync<{ key: string }>('SELECT key FROM entries');
+    for (const { key } of keys) {
+      if (!Object.hasOwn(doc.entries, key)) {
+        await tx.runAsync('DELETE FROM entries WHERE key = ?', key);
+      }
     }
   });
 }

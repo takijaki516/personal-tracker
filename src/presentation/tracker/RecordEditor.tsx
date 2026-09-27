@@ -7,7 +7,7 @@ import Field from './Field';
 import { styles as s } from './styles';
 import type { SaveResult } from './useTrackerRecords';
 
-export type RecordKind = 'meal' | 'workout' | 'weight';
+export type RecordKind = 'meal' | 'workout';
 
 export type Editor = { kind: RecordKind; id: string | null; date: string };
 
@@ -32,12 +32,6 @@ const fields = {
     max: 1440,
     range: '운동 시간 0.1~1,440분',
   },
-  weight: {
-    title: '체중',
-    amountLabel: '체중 (kg)',
-    max: 500,
-    range: '체중 0.1~500kg',
-  },
 };
 
 export default function RecordEditor({ editor, day, busy, onSave, onClose }: Props) {
@@ -47,15 +41,9 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
       ? day.meals.find((meal) => meal.id === editor.id)
       : day.workouts.find((workout) => workout.id === editor.id);
   const [name, setName] = useState(item?.name ?? '');
-  const [amount, setAmount] = useState(() => {
-    if (editor.kind === 'weight') {
-      return String(day.weight ?? '');
-    }
-    if (item) {
-      return String('calories' in item ? item.calories : item.minutes);
-    }
-    return '';
-  });
+  const [amount, setAmount] = useState(
+    item ? String('calories' in item ? item.calories : item.minutes) : '',
+  );
   const [slot, setSlot] = useState(item && 'slot' in item ? item.slot : '아침');
   const [note, setNote] = useState(item && 'note' in item ? item.note : '');
   const [formError, setFormError] = useState('');
@@ -66,16 +54,13 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
       !Number.isFinite(n) ||
       n < (editor.kind === 'meal' ? 0 : 0.1) ||
       n > field.max ||
-      (editor.kind !== 'weight' && !name.trim())
+      !name.trim()
     ) {
       setFormError(`이름과 수치를 확인해 주세요. ${field.range} 범위로 입력할 수 있어요.`);
       return;
     }
     const current = day;
     const next = { ...current };
-    if (editor.kind === 'weight') {
-      next.weight = n;
-    }
     if (editor.kind === 'meal') {
       const item = {
         id: editor.id ?? Crypto.randomUUID(),
@@ -131,13 +116,11 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
                 ))}
               </View>
             )}
-            {editor.kind !== 'weight' && (
-              <Field
-                label={editor.kind === 'meal' ? '음식 이름' : '운동 이름'}
-                value={name}
-                onChangeText={setName}
-              />
-            )}
+            <Field
+              label={editor.kind === 'meal' ? '음식 이름' : '운동 이름'}
+              value={name}
+              onChangeText={setName}
+            />
             <Field
               label={field.amountLabel}
               value={amount}

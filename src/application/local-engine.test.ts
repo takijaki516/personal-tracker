@@ -7,7 +7,14 @@ const data = {
   days: {
     '2026-09-15': {
       ...emptyDay(),
-      weight: 70,
+      workouts: [
+        {
+          id: 'walk',
+          name: '산책',
+          minutes: 30,
+          note: '',
+        },
+      ],
     },
   },
 };
@@ -39,6 +46,22 @@ describe('local persistence and backups', () => {
     expect(backup.mock.invocationCallOrder[0]).toBeLessThan(commit.mock.invocationCallOrder[0]);
     await engine.read();
     expect(backup).toHaveBeenCalledTimes(1);
+  });
+  it('drops weight while migrating a legacy store', async () => {
+    const legacy = {
+      ...data,
+      days: {
+        '2026-09-15': {
+          ...data.days['2026-09-15'],
+          weight: 70,
+        },
+      },
+    };
+    const { engine } = fixture(JSON.stringify(legacy));
+    expect(JSON.parse(await engine.read())).toEqual(data);
+    expect(Object.values((await engine.document()).entries).map((entry) => entry.kind)).toEqual([
+      'workout',
+    ]);
   });
   it('leaves unreadable legacy data untouched', async () => {
     const { engine, commit } = fixture('{broken');

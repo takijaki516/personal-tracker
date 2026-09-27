@@ -18,7 +18,6 @@ import RecordEditor, { type Editor, type RecordKind } from './RecordEditor';
 import { styles as s } from './styles';
 import TrackerSidebar from './TrackerSidebar';
 import { useTrackerRecords } from './useTrackerRecords';
-import WeightPanel from './WeightPanel';
 
 export default function TrackerScreen() {
   const { width } = useWindowDimensions();
@@ -56,22 +55,6 @@ export default function TrackerScreen() {
     });
   }
 
-  function removeWeight() {
-    setConfirmation({
-      title: '체중 삭제',
-      description: `${date}의 체중 기록을 삭제할까요?`,
-      run: async () =>
-        (
-          await updateDay(
-            {
-              ...day,
-              weight: null,
-            },
-            date,
-          )
-        ).ok,
-    });
-  }
   if (!loaded) {
     return (
       <View style={s.loading}>
@@ -108,38 +91,15 @@ export default function TrackerScreen() {
               <Button label="닫기" onPress={() => setMessage('')} />
             </View>
           )}
-          <View style={[s.columns, wide && { flexDirection: 'row' }]}>
-            <View
-              style={{
-                flex: wide ? 1.4 : undefined,
-                gap: 16,
-              }}
-            >
-              <DailyRecords
-                day={day}
-                tab={tab}
-                locked={locked}
-                onTabChange={setTab}
-                onEdit={openEditor}
-                onRemove={remove}
-              />
-            </View>
-            <View
-              style={{
-                flex: wide ? 1 : undefined,
-                gap: 16,
-              }}
-            >
-              <WeightPanel
-                days={data.days}
-                date={date}
-                weight={day.weight}
-                locked={locked}
-                onEdit={() => openEditor('weight')}
-                onRemove={removeWeight}
-                onDateChange={setDate}
-              />
-            </View>
+          <View style={s.columns}>
+            <DailyRecords
+              day={day}
+              tab={tab}
+              locked={locked}
+              onTabChange={setTab}
+              onEdit={openEditor}
+              onRemove={remove}
+            />
           </View>
           <SyncPanel disabled={locked || !!editor || !!confirmation} onChange={refresh} />
         </ScrollView>

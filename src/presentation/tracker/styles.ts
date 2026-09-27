@@ -103,11 +103,6 @@ export const styles = StyleSheet.create({
     lineHeight: 19,
     color: '#849078',
   },
-  unit: {
-    fontSize: 13,
-    fontWeight: '400',
-    color: '#8a957f',
-  },
   columns: { gap: 22 },
   sectionTitle: {
     fontSize: 16,
@@ -142,12 +137,6 @@ export const styles = StyleSheet.create({
     backgroundColor: '#f4f0e7',
     borderRadius: 6,
     overflow: 'hidden',
-  },
-  weight: {
-    fontSize: 38,
-    fontWeight: '500',
-    color: '#263a30',
-    marginTop: 22,
   },
   overlay: {
     flex: 1,

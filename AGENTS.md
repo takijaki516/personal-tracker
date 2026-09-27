@@ -4,7 +4,7 @@
 
 ## 프로젝트 구조 빠른 참조
 
-식단·체중·운동을 기록하는 로컬 우선 앱입니다. Android는 Expo/React Native, macOS는 공통 화면을 React Native Web으로 렌더링하는 Electron 앱입니다. 각 기기의 SQLite에 저장하며, 클라우드·로그인 없이 같은 Wi-Fi에서 동기화합니다. 일반 브라우저는 localStorage 기반 미리보기로, SQLite·자동 백업·LAN 동기화를 제공하지 않습니다.
+식단·운동을 기록하는 로컬 우선 앱입니다. Android는 Expo/React Native, macOS는 공통 화면을 React Native Web으로 렌더링하는 Electron 앱입니다. 각 기기의 SQLite에 저장하며, 클라우드·로그인 없이 같은 Wi-Fi에서 동기화합니다. 일반 브라우저는 localStorage 기반 미리보기로, SQLite·자동 백업·LAN 동기화를 제공하지 않습니다.
 
 | 작업 영역         | 확인할 파일과 역할                                                                                                                                                                                 |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -23,7 +23,7 @@
 
 `src/presentation/tracker/`에서 UI를 수정할 때는 아래 파일부터 확인합니다. 이 목록의 경로는 해당 폴더 기준입니다.
 
-- `DailySummary.tsx` 일일 요약, `DailyRecords.tsx` 식단·운동 목록, `WeightPanel.tsx` 체중 그래프·이력.
+- `DailyRecords.tsx` 식단·운동 목록.
 - `RecordEditor.tsx` 입력 폼·입력값 검증·저장 요청. 검증 범위 변경 시 `src/domain/data.ts`의 백업 검증도 함께 확인합니다.
 - `DateNavigation.tsx` 날짜 이동 및 `DatePicker.tsx` 연결, `ConfirmationDialog.tsx` 삭제·복원 확인.
 - `BackupPanel.tsx` 수동 백업·복원 버튼, `TrackerSidebar.tsx` 사이드바, `Button.tsx`·`Field.tsx` 공통 컨트롤, `styles.ts` 기록 화면 스타일. `src/presentation/sync/SyncPanel.tsx`는 자체 스타일을 관리합니다.

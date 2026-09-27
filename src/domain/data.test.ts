@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { emptyStore, isDate, localDate, parseStore, shiftDate } from './data';
+import { emptyDay, emptyStore, isDate, localDate, parseStore, shiftDate } from './data';
 describe('backup validation', () => {
   it('round trips complete records', () => {
     const store = {
       version: 1,
       days: {
         '2026-09-14': {
-          weight: 72.3,
           meals: [
             {
               id: 'a',
@@ -28,6 +27,24 @@ describe('backup validation', () => {
     };
     expect(parseStore(JSON.stringify(store))).toEqual(store);
     expect(parseStore(JSON.stringify(emptyStore()))).toEqual(emptyStore());
+  });
+  it('drops weight from an older backup while keeping other records', () => {
+    const legacy = {
+      version: 1,
+      days: {
+        '2026-09-14': {
+          meals: [],
+          workouts: [],
+          weight: 72.3,
+        },
+      },
+    };
+    expect(parseStore(JSON.stringify(legacy))).toEqual({
+      version: 1,
+      days: {
+        '2026-09-14': emptyDay(),
+      },
+    });
   });
   it.each([
     null,

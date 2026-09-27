@@ -2,7 +2,7 @@ export type Meal = { id: string; name: string; slot: string; calories: number };
 
 export type Workout = { id: string; name: string; minutes: number; note: string };
 
-export type Day = { meals: Meal[]; workouts: Workout[]; weight: number | null };
+export type Day = { meals: Meal[]; workouts: Workout[] };
 
 export type Store = { version: 1; days: Record<string, Day> };
 
@@ -10,7 +10,6 @@ export const STORAGE_KEY = 'harugyeol.v1';
 export const emptyDay = (): Day => ({
   meals: [],
   workouts: [],
-  weight: null,
 });
 export const emptyStore = (): Store => ({
   version: 1,
@@ -44,7 +43,7 @@ export function parseStore(raw: string): Store {
       !object(day) ||
       !Array.isArray(day.meals) ||
       !Array.isArray(day.workouts) ||
-      !(day.weight === null || bounded(day.weight, 500))
+      ('weight' in day && !(day.weight === null || bounded(day.weight, 500)))
     ) {
       throw new Error('날짜 또는 기록 형식이 올바르지 않습니다.');
     }
@@ -77,5 +76,17 @@ export function parseStore(raw: string): Store {
       ids.add(workout.id);
     }
   }
-  return data as Store;
+  const store = data as Store;
+  return {
+    version: 1,
+    days: Object.fromEntries(
+      Object.entries(store.days).map(([date, day]) => [
+        date,
+        {
+          meals: day.meals,
+          workouts: day.workouts,
+        },
+      ]),
+    ),
+  };
 }

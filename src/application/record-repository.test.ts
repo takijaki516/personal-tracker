@@ -18,7 +18,15 @@ describe('async storage migration', () => {
         read: async () => JSON.stringify(data),
         write: vi.fn<StoragePort['write']>(),
       }),
-    ).toEqual(data);
+    ).toEqual({
+      version: 1,
+      days: {
+        '2026-09-14': {
+          meals: [],
+          workouts: [],
+        },
+      },
+    });
   });
   it('does not overwrite unreadable data', async () => {
     const write = vi.fn<StoragePort['write']>();

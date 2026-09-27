@@ -89,4 +89,22 @@ describe('record synchronization', () => {
     };
     expect(() => parseDocument(JSON.stringify(invalid))).toThrow('식단 기록을 확인해 주세요.');
   });
+  it('discards old weight entries during parsing and repeated merges', () => {
+    const legacy = {
+      ...newDocument('older-device'),
+      entries: {
+        '["2026-09-15","weight","weight"]': {
+          date,
+          kind: 'weight',
+          id: 'weight',
+          value: 70,
+          counter: 0,
+          device: 'older-device',
+        },
+      },
+    };
+    const parsed = parseDocument(JSON.stringify(legacy));
+    expect(parsed.entries).toEqual({});
+    expect(snapshot(mergeDocuments(newDocument('new-device'), parsed))).toEqual(emptyStore());
+  });
 });

@@ -1,9 +1,20 @@
-import { STORAGE_KEY } from '../domain/data';
+import { parseStore, STORAGE_KEY } from '../domain/data';
 import type {} from './desktop-bridge';
 
 // Keep the original PWA key: existing records survive on the same web origin.
 export async function readStored(): Promise<string | null> {
-  return window.exerciseDesktop ? window.exerciseDesktop.read() : localStorage.getItem(STORAGE_KEY);
+  if (window.exerciseDesktop) {
+    return window.exerciseDesktop.read();
+  }
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw === null) {
+    return null;
+  }
+  const normalized = JSON.stringify(parseStore(raw));
+  if (normalized !== raw) {
+    localStorage.setItem(STORAGE_KEY, normalized);
+  }
+  return normalized;
 }
 export async function writeStored(raw: string, base?: string): Promise<void> {
   if (window.exerciseDesktop) {

@@ -2,12 +2,14 @@ import { emptyDay, emptyStore, isDate, parseStore, type Store } from './data';
 
 export type Entry = {
   date: string;
-  kind: 'meal' | 'workout' | 'weight';
+  kind: 'meal' | 'workout';
   id: string;
   value: unknown;
   counter: number;
   device: string;
 };
+
+type LegacyWeightEntry = Omit<Entry, 'kind'> & { kind: 'weight' };
 
 export type SyncDocument = {
   schema: 1;
@@ -16,7 +18,7 @@ export type SyncDocument = {
   entries: Record<string, Entry>;
 };
 
-export const entryKey = (e: Pick<Entry, 'date' | 'kind' | 'id'>) =>
+export const entryKey = (e: Pick<Entry, 'date' | 'id'> & { kind: string }) =>
   JSON.stringify([e.date, e.kind, e.id]);
 export const newDocument = (device: string): SyncDocument => ({
   schema: 1,
@@ -40,9 +42,6 @@ export function snapshot(doc: SyncDocument): Store {
       continue;
     }
     const day = (store.days[e.date] ??= emptyDay());
-    if (e.kind === 'weight') {
-      day.weight = e.value as number;
-    }
     if (e.kind === 'meal') {
       day.meals.push(e.value as (typeof day.meals)[number]);
     }
@@ -74,7 +73,7 @@ export function parseDocument(raw: string): SyncDocument {
   if (Object.keys(d.entries).length > 50000) {
     throw new Error('동기화 기록 수가 너무 많습니다.');
   }
-  for (const [key, e] of Object.entries(d.entries) as [string, Entry][]) {
+  for (const [key, e] of Object.entries(d.entries) as [string, Entry | LegacyWeightEntry][]) {
     if (
       !e ||
       !isDate(e.date) ||
@@ -92,6 +91,13 @@ export function parseDocument(raw: string): SyncDocument {
       throw new Error('체중 기록 키가 올바르지 않습니다.');
     }
     if (
+      e.kind === 'weight' &&
+      e.value !== null &&
+      (typeof e.value !== 'number' || !Number.isFinite(e.value) || e.value < 0.1 || e.value > 500)
+    ) {
+      throw new Error('체중 기록 형식이 올바르지 않습니다.');
+    }
+    if (
       e.value !== null &&
       e.kind !== 'weight' &&
       (typeof e.value !== 'object' || (e.value as { id?: string }).id !== e.id)
@@ -99,8 +105,16 @@ export function parseDocument(raw: string): SyncDocument {
       throw new Error('기록 ID가 일치하지 않습니다.');
     }
   }
-  snapshot(d);
-  return d;
+  const doc: SyncDocument = {
+    ...d,
+    entries: Object.fromEntries(
+      (Object.entries(d.entries) as [string, Entry | LegacyWeightEntry][]).filter(
+        ([, entry]) => entry.kind !== 'weight',
+      ),
+    ),
+  };
+  snapshot(doc);
+  return doc;
 }
 
 function flatten(store: Store): Record<string, Omit<Entry, 'counter' | 'device'>> {
@@ -119,15 +133,6 @@ function flatten(store: Store): Record<string, Omit<Entry, 'counter' | 'device'>
         };
         result[entryKey(e)] = e;
       }
-    }
-    if (day.weight !== null) {
-      const e = {
-        date,
-        kind: 'weight' as const,
-        id: 'weight',
-        value: day.weight,
-      };
-      result[entryKey(e)] = e;
     }
   }
   return result;
