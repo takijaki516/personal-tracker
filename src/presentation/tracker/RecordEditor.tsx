@@ -19,53 +19,33 @@ type Props = {
   onClose: () => void;
 };
 
-const fields = {
-  meal: {
-    title: '식단',
-    amountLabel: '칼로리 (kcal)',
-    max: 20000,
-    range: '칼로리 0~20,000',
-  },
-  workout: {
-    title: '운동',
-    amountLabel: '운동 시간 (분)',
-    max: 1440,
-    range: '운동 시간 0.1~1,440분',
-  },
-};
-
 export default function RecordEditor({ editor, day, busy, onSave, onClose }: Props) {
-  const field = fields[editor.kind];
-  const item =
-    editor.kind === 'meal'
-      ? day.meals.find((meal) => meal.id === editor.id)
-      : day.workouts.find((workout) => workout.id === editor.id);
+  const meal =
+    editor.kind === 'meal' ? day.meals.find((entry) => entry.id === editor.id) : undefined;
+  const workout =
+    editor.kind === 'workout' ? day.workouts.find((entry) => entry.id === editor.id) : undefined;
+  const item = meal ?? workout;
   const [name, setName] = useState(item?.name ?? '');
-  const [amount, setAmount] = useState(
-    item ? String('calories' in item ? item.calories : item.minutes) : '',
-  );
-  const [slot, setSlot] = useState(item && 'slot' in item ? item.slot : '아침');
-  const [note, setNote] = useState(item && 'note' in item ? item.note : '');
+  const [amount, setAmount] = useState(meal ? String(meal.calories) : '');
+  const [slot, setSlot] = useState(meal?.slot ?? '아침');
   const [formError, setFormError] = useState('');
   async function submit() {
-    const n = Number(amount.trim());
-    if (
-      !amount.trim() ||
-      !Number.isFinite(n) ||
-      n < (editor.kind === 'meal' ? 0 : 0.1) ||
-      n > field.max ||
-      !name.trim()
-    ) {
-      setFormError(`이름과 수치를 확인해 주세요. ${field.range} 범위로 입력할 수 있어요.`);
+    if (!name.trim()) {
+      setFormError('이름을 입력해 주세요.');
       return;
     }
     const current = day;
     const next = { ...current };
     if (editor.kind === 'meal') {
+      const calories = Number(amount.trim());
+      if (!amount.trim() || !Number.isFinite(calories) || calories < 0 || calories > 20000) {
+        setFormError('칼로리 0~20,000 범위로 입력해 주세요.');
+        return;
+      }
       const item = {
         id: editor.id ?? Crypto.randomUUID(),
         name: name.trim(),
-        calories: n,
+        calories,
         slot,
       };
       next.meals = editor.id
@@ -76,8 +56,6 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
       const item = {
         id: editor.id ?? Crypto.randomUUID(),
         name: name.trim(),
-        minutes: n,
-        note: note.trim(),
       };
       next.workouts = editor.id
         ? current.workouts.map((w) => (w.id === editor.id ? item : w))
@@ -98,8 +76,8 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
         style={s.overlay}
       >
         <View style={s.modal} accessibilityViewIsModal>
-          <ScrollView keyboardShouldPersistTaps="handled">
-            <Text style={s.sectionTitle}>{field.title} 기록</Text>
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <Text style={s.sectionTitle}>{editor.kind === 'meal' ? '식단' : '운동'} 기록</Text>
             <Text style={s.caption}>{editor.date}</Text>
             {editor.kind === 'meal' && (
               <View
@@ -121,20 +99,13 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
               value={name}
               onChangeText={setName}
             />
-            <Field
-              label={field.amountLabel}
-              value={amount}
-              onChangeText={setAmount}
-              numeric
-              maxLength={10}
-            />
-            {editor.kind === 'workout' && (
+            {editor.kind === 'meal' && (
               <Field
-                label="메모 (선택)"
-                value={note}
-                onChangeText={setNote}
-                multiline
-                maxLength={500}
+                label="칼로리 (kcal)"
+                value={amount}
+                onChangeText={setAmount}
+                numeric
+                maxLength={10}
               />
             )}
             {!!formError && (

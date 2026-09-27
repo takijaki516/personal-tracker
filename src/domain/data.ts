@@ -1,6 +1,6 @@
 export type Meal = { id: string; name: string; slot: string; calories: number };
 
-export type Workout = { id: string; name: string; minutes: number; note: string };
+export type Workout = { id: string; name: string };
 
 export type Day = { meals: Meal[]; workouts: Workout[] };
 
@@ -67,9 +67,8 @@ export function parseStore(raw: string): Store {
         !short(workout.id, 100) ||
         ids.has(workout.id) ||
         !short(workout.name, 100) ||
-        !bounded(workout.minutes, 1440) ||
-        typeof workout.note !== 'string' ||
-        workout.note.length > 500
+        ('minutes' in workout && !bounded(workout.minutes, 1440)) ||
+        ('note' in workout && (typeof workout.note !== 'string' || workout.note.length > 500))
       ) {
         throw new Error('운동 기록을 확인해 주세요.');
       }
@@ -84,7 +83,10 @@ export function parseStore(raw: string): Store {
         date,
         {
           meals: day.meals,
-          workouts: day.workouts,
+          workouts: day.workouts.map(({ id, name }) => ({
+            id,
+            name,
+          })),
         },
       ]),
     ),

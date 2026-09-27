@@ -18,8 +18,6 @@ describe('backup validation', () => {
             {
               id: 'b',
               name: '산책',
-              minutes: 30,
-              note: '',
             },
           ],
         },
@@ -27,6 +25,30 @@ describe('backup validation', () => {
     };
     expect(parseStore(JSON.stringify(store))).toEqual(store);
     expect(parseStore(JSON.stringify(emptyStore()))).toEqual(emptyStore());
+  });
+  it('drops minutes and notes from older workout backups', () => {
+    const legacy = {
+      version: 1,
+      days: {
+        '2026-09-14': {
+          meals: [],
+          workouts: [
+            {
+              id: 'walk',
+              name: '산책',
+              minutes: 30,
+              note: '강변',
+            },
+          ],
+        },
+      },
+    };
+    expect(parseStore(JSON.stringify(legacy)).days['2026-09-14'].workouts).toEqual([
+      {
+        id: 'walk',
+        name: '산책',
+      },
+    ]);
   });
   it('drops weight from an older backup while keeping other records', () => {
     const legacy = {
@@ -90,9 +112,38 @@ describe('backup validation', () => {
         },
       },
     },
+    {
+      version: 1,
+      days: {
+        '2026-09-14': {
+          meals: [],
+          workouts: [
+            {
+              id: 'walk',
+              name: '',
+            },
+          ],
+        },
+      },
+    },
+    {
+      version: 1,
+      days: {
+        '2026-09-14': {
+          meals: [],
+          workouts: [
+            {
+              id: 'walk',
+              name: '산책',
+              minutes: -1,
+            },
+          ],
+        },
+      },
+    },
   ])('rejects invalid records: %j', (value) => {
     expect(() => parseStore(JSON.stringify(value))).toThrow(
-      /백업 형식|날짜 또는 기록 형식|식단 기록/,
+      /백업 형식|날짜 또는 기록 형식|식단 기록|운동 기록/,
     );
   });
 });

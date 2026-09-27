@@ -56,7 +56,7 @@ export function openStorage(directory: string) {
           entries,
         }),
       );
-      if (Object.keys(doc.entries).length !== Object.keys(entries).length) {
+      if (JSON.stringify(doc.entries) !== JSON.stringify(entries)) {
         await adapter.commit(doc);
       }
       return doc;

@@ -54,9 +54,6 @@ export default function DailyRecords({ date, day, locked, onEdit, onRemove }: Pr
             <View style={s.record} key={w.id}>
               <View style={{ flex: 1 }}>
                 <Text style={s.body}>{w.name}</Text>
-                <Text style={s.caption}>
-                  {w.minutes}분{w.note ? ` · ${w.note}` : ''}
-                </Text>
               </View>
               <Button label="수정" disabled={locked} onPress={() => onEdit('workout', w.id)} />
               <Button label="삭제" disabled={locked} onPress={() => onRemove('workouts', w.id)} />

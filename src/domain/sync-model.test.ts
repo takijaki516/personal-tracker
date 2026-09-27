@@ -107,4 +107,35 @@ describe('record synchronization', () => {
     expect(parsed.entries).toEqual({});
     expect(snapshot(mergeDocuments(newDocument('new-device'), parsed))).toEqual(emptyStore());
   });
+  it('drops minutes and notes from older workout sync entries', () => {
+    const legacy = {
+      ...newDocument('older-device'),
+      entries: {
+        '["2026-09-15","workout","walk"]': {
+          date,
+          kind: 'workout',
+          id: 'walk',
+          value: {
+            id: 'walk',
+            name: '산책',
+            minutes: 30,
+            note: '강변',
+          },
+          counter: 0,
+          device: 'older-device',
+        },
+      },
+    };
+    const parsed = parseDocument(JSON.stringify(legacy));
+    expect(parsed.entries['["2026-09-15","workout","walk"]'].value).toEqual({
+      id: 'walk',
+      name: '산책',
+    });
+    expect(snapshot(parsed).days[date].workouts).toEqual([
+      {
+        id: 'walk',
+        name: '산책',
+      },
+    ]);
+  });
 });

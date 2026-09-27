@@ -1,4 +1,4 @@
-import { emptyDay, emptyStore, isDate, parseStore, type Store } from './data';
+import { emptyDay, emptyStore, isDate, parseStore, type Store, type Workout } from './data';
 
 export type Entry = {
   date: string;
@@ -114,7 +114,27 @@ export function parseDocument(raw: string): SyncDocument {
     ),
   };
   snapshot(doc);
-  return doc;
+  return {
+    ...doc,
+    entries: Object.fromEntries(
+      Object.entries(doc.entries).map(([key, entry]) => {
+        if (entry.kind !== 'workout' || entry.value === null) {
+          return [key, entry];
+        }
+        const { id, name } = entry.value as Workout;
+        return [
+          key,
+          {
+            ...entry,
+            value: {
+              id,
+              name,
+            },
+          },
+        ];
+      }),
+    ),
+  };
 }
 
 function flatten(store: Store): Record<string, Omit<Entry, 'counter' | 'device'>> {

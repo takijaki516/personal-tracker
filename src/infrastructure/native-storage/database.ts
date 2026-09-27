@@ -53,7 +53,7 @@ export async function loadDocument() {
       entries,
     }),
   );
-  if (Object.keys(doc.entries).length !== rows.length) {
+  if (JSON.stringify(doc.entries) !== JSON.stringify(entries)) {
     await commitDocument(doc);
   }
   return doc;

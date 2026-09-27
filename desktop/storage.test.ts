@@ -96,4 +96,52 @@ describe('actual SQLite disk storage', () => {
     expect(check.prepare('SELECT key FROM entries').all()).toHaveLength(1);
     check.close();
   });
+  it('removes legacy workout minutes and notes from SQLite on load', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'exercise-db-'));
+    dirs.push(dir);
+    let store = openStorage(dir);
+    const data = {
+      version: 1 as const,
+      days: {
+        [localDate()]: {
+          ...emptyDay(),
+          workouts: [
+            {
+              id: 'walk',
+              name: '산책',
+            },
+          ],
+        },
+      },
+    };
+    await store.engine.write(JSON.stringify(data));
+    store.close();
+
+    const database = new DatabaseSync(join(dir, 'exercise.sqlite'));
+    const row = database.prepare('SELECT key,value FROM entries').get() as {
+      key: string;
+      value: string;
+    };
+    const entry = JSON.parse(row.value) as { value: { id: string; name: string } };
+    database.prepare('UPDATE entries SET value = ? WHERE key = ?').run(
+      JSON.stringify({
+        ...entry,
+        value: {
+          ...entry.value,
+          minutes: 30,
+          note: '강변',
+        },
+      }),
+      row.key,
+    );
+    database.close();
+
+    store = openStorage(dir);
+    expect(JSON.parse(await store.engine.read())).toEqual(data);
+    store.close();
+    const check = new DatabaseSync(join(dir, 'exercise.sqlite'));
+    const stored = check.prepare('SELECT value FROM entries').get() as { value: string };
+    expect(JSON.parse(stored.value).value).toEqual(data.days[localDate()].workouts[0]);
+    check.close();
+  });
 });

@@ -58,8 +58,6 @@ describe('encrypted local network transport', () => {
             {
               id: 'walk',
               name: '산책',
-              minutes: 30,
-              note: '',
             },
           ],
         },
