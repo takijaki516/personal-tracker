@@ -7,16 +7,19 @@ export default function Button({
   primary = false,
   disabled = false,
   selected = false,
+  accessibilityLabel,
 }: {
   label: string;
   onPress: () => void;
   primary?: boolean;
   disabled?: boolean;
   selected?: boolean;
+  accessibilityLabel?: string;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{
         disabled,
         selected,

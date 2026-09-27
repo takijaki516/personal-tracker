@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Modal, Text, View } from 'react-native';
-import { isDate } from '../../domain/data';
+import { Modal, Pressable, Text, View } from 'react-native';
+import { localDate } from '../../domain/data';
 import Button from './Button';
-import Field from './Field';
+import { calendarDates, shiftMonth } from './calendar';
 import { styles as s } from './styles';
+
+const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
 
 export default function DatePicker({
   date,
@@ -14,42 +16,64 @@ export default function DatePicker({
   onSelect: (date: string) => void;
   onClose: () => void;
 }) {
-  const [dateDraft, setDateDraft] = useState(date);
-  const [formError, setFormError] = useState('');
+  const [month, setMonth] = useState(date.slice(0, 7));
+  const today = localDate();
+  const [year, monthNumber] = month.split('-');
+
   return (
-    <Modal visible transparent animationType="fade" onRequestClose={() => onClose()}>
+    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
       <View style={s.overlay}>
-        <View style={s.modal} accessibilityViewIsModal>
-          <Text style={s.sectionTitle}>날짜 선택</Text>
-          <Field
-            label="날짜 (YYYY-MM-DD)"
-            value={dateDraft}
-            onChangeText={setDateDraft}
-            maxLength={10}
-          />
-          {!!formError && <Text style={s.error}>{formError}</Text>}
-          <View
-            style={[
-              s.row,
-              {
-                justifyContent: 'flex-end',
-                marginTop: 20,
-              },
-            ]}
-          >
-            <Button label="취소" onPress={() => onClose()} />
+        <View style={[s.modal, s.calendarModal]} accessibilityViewIsModal>
+          <View style={s.between}>
+            <Text style={s.sectionTitle}>날짜 선택</Text>
+            <Button label="닫기" onPress={onClose} />
+          </View>
+          <View style={[s.between, s.calendarMonthHeader]}>
             <Button
-              label="이동"
-              primary
-              onPress={() => {
-                if (isDate(dateDraft)) {
-                  onSelect(dateDraft);
-                  onClose();
-                } else {
-                  setFormError('올바른 날짜를 입력해 주세요. 예: 2026-09-14');
-                }
-              }}
+              label="‹"
+              accessibilityLabel="이전 달"
+              onPress={() => setMonth(shiftMonth(month, -1))}
             />
+            <Text style={s.calendarMonthLabel}>
+              {year}년 {Number(monthNumber)}월
+            </Text>
+            <Button
+              label="›"
+              accessibilityLabel="다음 달"
+              onPress={() => setMonth(shiftMonth(month, 1))}
+            />
+          </View>
+          <View style={s.calendarGrid}>
+            {weekdays.map((weekday) => (
+              <View key={weekday} style={s.calendarCell}>
+                <Text style={s.calendarWeekday}>{weekday}</Text>
+              </View>
+            ))}
+            {calendarDates(month).map((day, index) => (
+              <View key={day ?? `empty-${index}`} style={s.calendarCell}>
+                {day && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${day} 선택`}
+                    accessibilityState={{ selected: day === date }}
+                    onPress={() => {
+                      onSelect(day);
+                      onClose();
+                    }}
+                    style={({ pressed }) => [
+                      s.calendarDay,
+                      day === today && s.calendarToday,
+                      day === date && s.calendarSelectedDay,
+                      pressed && { opacity: 0.65 },
+                    ]}
+                  >
+                    <Text style={[s.calendarDayText, day === date && s.calendarSelectedDayText]}>
+                      {Number(day.slice(-2))}
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+            ))}
           </View>
         </View>
       </View>

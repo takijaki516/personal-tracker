@@ -153,6 +153,53 @@ export const styles = StyleSheet.create({
     maxWidth: 460,
     maxHeight: '90%',
   },
+  calendarModal: {
+    maxWidth: 390,
+  },
+  calendarMonthHeader: {
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  calendarMonthLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2f4536',
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  calendarCell: {
+    width: '14.2857%',
+    padding: 2,
+  },
+  calendarWeekday: {
+    textAlign: 'center',
+    color: '#849078',
+    paddingVertical: 8,
+    fontSize: 12,
+  },
+  calendarDay: {
+    minHeight: 42,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calendarToday: {
+    borderWidth: 1,
+    borderColor: '#245d48',
+  },
+  calendarSelectedDay: {
+    backgroundColor: '#245d48',
+  },
+  calendarDayText: {
+    fontSize: 14,
+    color: '#2f4536',
+  },
+  calendarSelectedDayText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
   field: {
     marginTop: 20,
     gap: 8,
