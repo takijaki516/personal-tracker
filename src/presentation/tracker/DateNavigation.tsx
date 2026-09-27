@@ -14,6 +14,7 @@ export default function DateNavigation({
   onDateChange: (date: string) => void;
 }) {
   const [dateOpen, setDateOpen] = useState(false);
+  const today = localDate();
   return (
     <>
       <View style={s.datebar}>
@@ -27,7 +28,7 @@ export default function DateNavigation({
           />
           <Button label="다음 ›" onPress={() => onDateChange(shiftDate(date, 1))} />
         </View>
-        <Button label="오늘" onPress={() => onDateChange(localDate())} />
+        <Button label="오늘" selected={date === today} onPress={() => onDateChange(today)} />
       </View>
 
       {dateOpen && (
