@@ -20,7 +20,7 @@ export async function getConnectionInfo(): Promise<ConnectionInfo> {
         connected: false,
         lastSync: null,
         backupPath: '',
-        note: '브라우저 미리보기입니다. SQLite·자동 백업·Wi-Fi 동기화는 설치 앱에서 사용할 수 있어요.',
+        note: '',
       };
 }
 export async function connect(_code: string) {
