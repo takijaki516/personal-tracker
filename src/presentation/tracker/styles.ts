@@ -83,6 +83,18 @@ export const styles = StyleSheet.create({
     color: '#42633b',
     fontWeight: '500',
   },
+  dangerText: {
+    color: '#a14332',
+  },
+  dangerButton: {
+    backgroundColor: '#fbece8',
+  },
+  secondaryButton: {
+    backgroundColor: '#EAEDF1',
+  },
+  secondaryText: {
+    color: '#526174',
+  },
   primary: {
     backgroundColor: '#245d48',
     paddingHorizontal: 22,
@@ -132,6 +144,17 @@ export const styles = StyleSheet.create({
     paddingTop: 12,
     borderTopWidth: 1,
     borderColor: '#eef0e9',
+  },
+  workoutCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    marginTop: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e2e7dd',
+    borderRadius: 12,
+    backgroundColor: '#f1f5eb',
   },
   tag: {
     fontSize: 11,

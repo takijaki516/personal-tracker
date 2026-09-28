@@ -34,8 +34,18 @@ export default function DailyRecords({ date, day, locked, onEdit, onRemove }: Pr
                 <Text style={s.body}>{m.name}</Text>
                 <Text style={s.caption}>{m.calories} kcal</Text>
               </View>
-              <Button label="수정" disabled={locked} onPress={() => onEdit('meal', m.id)} />
-              <Button label="삭제" disabled={locked} onPress={() => onRemove('meals', m.id)} />
+              <Button
+                label="수정"
+                secondary
+                disabled={locked}
+                onPress={() => onEdit('meal', m.id)}
+              />
+              <Button
+                label="삭제"
+                danger
+                disabled={locked}
+                onPress={() => onRemove('meals', m.id)}
+              />
             </View>
           ))
         )}
@@ -51,11 +61,11 @@ export default function DailyRecords({ date, day, locked, onEdit, onRemove }: Pr
           </View>
         ) : (
           day.workouts.map((w) => (
-            <View style={s.record} key={w.id}>
+            <View style={s.workoutCard} key={w.id}>
               <View style={{ flex: 1 }}>
                 <Text style={s.body}>{w.name}</Text>
                 <Text style={s.caption}>
-                  {BODY_PARTS[w.bodyPart]} · {w.sets.length}세트
+                  {BODY_PARTS[w.bodyPart]} · 총 {w.sets.length}세트
                 </Text>
                 {w.sets.map((set, index) => (
                   <Text key={index} style={s.caption}>
@@ -64,8 +74,18 @@ export default function DailyRecords({ date, day, locked, onEdit, onRemove }: Pr
                   </Text>
                 ))}
               </View>
-              <Button label="수정" disabled={locked} onPress={() => onEdit('workout', w.id)} />
-              <Button label="삭제" disabled={locked} onPress={() => onRemove('workouts', w.id)} />
+              <Button
+                label="수정"
+                secondary
+                disabled={locked}
+                onPress={() => onEdit('workout', w.id)}
+              />
+              <Button
+                label="삭제"
+                danger
+                disabled={locked}
+                onPress={() => onRemove('workouts', w.id)}
+              />
             </View>
           ))
         )}

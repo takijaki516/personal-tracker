@@ -7,6 +7,8 @@ export default function Button({
   primary = false,
   disabled = false,
   selected = false,
+  danger = false,
+  secondary = false,
   accessibilityLabel,
 }: {
   label: string;
@@ -14,6 +16,8 @@ export default function Button({
   primary?: boolean;
   disabled?: boolean;
   selected?: boolean;
+  danger?: boolean;
+  secondary?: boolean;
   accessibilityLabel?: string;
 }) {
   return (
@@ -28,13 +32,24 @@ export default function Button({
       onPress={onPress}
       style={({ pressed }) => [
         s.button,
+        secondary && s.secondaryButton,
+        danger && s.dangerButton,
         primary && s.primary,
         selected && s.selected,
         pressed && { opacity: 0.65 },
         disabled && { opacity: 0.4 },
       ]}
     >
-      <Text style={[s.buttonText, primary && { color: '#fff' }]}>{label}</Text>
+      <Text
+        style={[
+          s.buttonText,
+          secondary && s.secondaryText,
+          danger && s.dangerText,
+          primary && { color: '#fff' },
+        ]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
