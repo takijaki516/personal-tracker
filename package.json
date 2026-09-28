@@ -4,6 +4,7 @@
   "scripts": {
     "start": "expo start",
     "dev": "expo start --web",
+    "food-search:dev": "node scripts/dev-food-search.mjs",
     "android": "expo start --android",
     "web": "expo start --web",
     "build": "expo export --platform web",
@@ -42,6 +43,7 @@
     "expo-sharing": "~57.0.19",
     "expo-sqlite": "~57.0.3",
     "expo-task-manager": "~57.0.17",
+    "htmlparser2": "^12.0.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
