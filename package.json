@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
-    "dev": "expo start --web",
+    "dev": "node scripts/dev-web.mjs",
     "food-search:dev": "node scripts/dev-food-search.mjs",
     "android": "expo start --android",
-    "web": "expo start --web",
+    "web": "node scripts/dev-web.mjs",
     "build": "expo export --platform web",
     "build:android": "expo export --platform android",
     "lint": "oxlint --deny-warnings --report-unused-disable-directives-severity error .",
