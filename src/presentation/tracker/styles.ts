@@ -237,6 +237,34 @@ export const styles = StyleSheet.create({
     marginTop: 20,
     gap: 8,
   },
+  foodSuggestions: {
+    borderWidth: 1,
+    borderColor: '#dce3d5',
+    borderRadius: 8,
+    backgroundColor: '#fbfcf8',
+    overflow: 'hidden',
+  },
+  foodSuggestionsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: '#e7eedc',
+  },
+  foodSuggestionsOptions: {
+    maxHeight: 120,
+  },
+  foodSuggestionOption: {
+    minHeight: 56,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderColor: '#eef0e9',
+  },
+  foodSuggestionsEmpty: {
+    padding: 12,
+  },
   favoriteFoods: {
     marginTop: 16,
   },

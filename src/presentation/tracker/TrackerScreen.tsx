@@ -121,6 +121,7 @@ export default function TrackerScreen() {
         <RecordEditor
           editor={editor}
           day={data.days[editor.date] ?? emptyDay()}
+          days={data.days}
           favoriteFoods={data.favoriteFoods ?? []}
           busy={busy}
           onSave={(next, target) =>

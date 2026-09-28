@@ -45,9 +45,13 @@ export function parseFoodInput(input: FoodInput): Omit<FavoriteFood, 'id'> {
   return food;
 }
 
+export function normalizeFoodName(name: string): string {
+  return name.trim().toLowerCase();
+}
+
 export function findFavoriteFood(foods: FavoriteFood[], name: string): FavoriteFood | undefined {
-  const normalized = name.trim().toLowerCase();
-  return foods.find((food) => food.name.trim().toLowerCase() === normalized);
+  const normalized = normalizeFoodName(name);
+  return foods.find((food) => normalizeFoodName(food.name) === normalized);
 }
 
 export function upsertFavoriteFood(foods: FavoriteFood[], food: FavoriteFood): FavoriteFood[] {

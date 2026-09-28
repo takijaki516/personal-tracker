@@ -10,6 +10,7 @@ import {
   type Day,
   type FavoriteFood,
   type Meal,
+  type Store,
   type WorkoutSet,
 } from '../../domain/data';
 import { findFavoriteFood, parseFoodInput } from '../../domain/favorite-foods';
@@ -17,6 +18,7 @@ import { WORKOUT_OPTIONS } from '../../domain/workout-options';
 import Button from './Button';
 import FavoriteFoods from './FavoriteFoods';
 import Field from './Field';
+import FoodNameInput from './FoodNameInput';
 import { styles as s } from './styles';
 import { errorText, type SaveResult } from './useTrackerRecords';
 import WorkoutSelect from './WorkoutSelect';
@@ -30,6 +32,7 @@ type SetInput = { reps: string; weightKg: string };
 type Props = {
   editor: Editor;
   day: Day;
+  days: Store['days'];
   favoriteFoods: FavoriteFood[];
   busy: boolean;
   onSave: (day: Day, date: string) => Promise<SaveResult>;
@@ -41,6 +44,7 @@ type Props = {
 export default function RecordEditor({
   editor,
   day,
+  days,
   favoriteFoods,
   busy,
   onSave,
@@ -77,6 +81,18 @@ export default function RecordEditor({
   const [favoriteMessage, setFavoriteMessage] = useState('');
   const existingFavorite = findFavoriteFood(favoriteFoods, name);
   const favoriteActionLabel = existingFavorite ? '☆ 즐겨찾기 업데이트' : '☆ 즐겨찾기 등록';
+
+  function selectFood(food: Omit<FavoriteFood, 'id'>) {
+    setName(food.name);
+    setAmount(String(food.calories));
+    setMacros({
+      carbohydrates: food.carbohydrates?.toString() ?? '',
+      protein: food.protein?.toString() ?? '',
+      fat: food.fat?.toString() ?? '',
+    });
+    setFormError('');
+    setFavoriteMessage('');
+  }
 
   function readFood() {
     setFormError('');
@@ -238,20 +254,17 @@ export default function RecordEditor({
                   disabled={busy}
                   registerLabel={favoriteActionLabel}
                   onRegister={() => void saveFavorite()}
-                  onSelect={(food) => {
-                    setName(food.name);
-                    setAmount(String(food.calories));
-                    setMacros({
-                      carbohydrates: food.carbohydrates?.toString() ?? '',
-                      protein: food.protein?.toString() ?? '',
-                      fat: food.fat?.toString() ?? '',
-                    });
-                    setFormError('');
-                    setFavoriteMessage('');
-                  }}
+                  onSelect={selectFood}
                   onRemove={(id) => void removeFavorite(id)}
                 />
-                <Field label="음식 이름" value={name} onChangeText={setName} disabled={busy} />
+                <FoodNameInput
+                  value={name}
+                  days={days}
+                  favoriteFoods={favoriteFoods}
+                  disabled={busy}
+                  onChangeText={setName}
+                  onSelect={selectFood}
+                />
               </>
             )}
             {editor.kind === 'workout' && (
