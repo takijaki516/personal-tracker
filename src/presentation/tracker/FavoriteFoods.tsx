@@ -7,11 +7,20 @@ import { styles as s } from './styles';
 type Props = {
   foods: FavoriteFood[];
   disabled: boolean;
+  registerLabel: string;
+  onRegister: () => void;
   onSelect: (food: FavoriteFood) => void;
   onRemove: (id: string) => void;
 };
 
-export default function FavoriteFoods({ foods, disabled, onSelect, onRemove }: Props) {
+export default function FavoriteFoods({
+  foods,
+  disabled,
+  registerLabel,
+  onRegister,
+  onSelect,
+  onRemove,
+}: Props) {
   const [open, setOpen] = useState(false);
   const sorted = [...foods].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 
@@ -38,6 +47,10 @@ export default function FavoriteFoods({ foods, disabled, onSelect, onRemove }: P
       </Pressable>
       {open && (
         <View style={s.favoriteFoodsList}>
+          <View style={s.favoriteFoodsToolbar}>
+            <Button label={registerLabel} secondary disabled={disabled} onPress={onRegister} />
+            <Text style={s.caption}>입력한 음식과 칼로리·영양소를 저장합니다.</Text>
+          </View>
           {foods.length === 0 ? (
             <View style={s.favoriteFoodsEmpty}>
               <Text style={s.body}>아직 등록한 음식이 없어요.</Text>

@@ -258,6 +258,13 @@ export const styles = StyleSheet.create({
     padding: 14,
     gap: 4,
   },
+  favoriteFoodsToolbar: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderColor: '#eef0e9',
+    alignItems: 'flex-start',
+    gap: 4,
+  },
   favoriteFoodRow: {
     flexDirection: 'row',
     alignItems: 'center',

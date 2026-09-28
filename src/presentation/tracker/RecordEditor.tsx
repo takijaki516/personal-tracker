@@ -76,6 +76,7 @@ export default function RecordEditor({
   const [formError, setFormError] = useState('');
   const [favoriteMessage, setFavoriteMessage] = useState('');
   const existingFavorite = findFavoriteFood(favoriteFoods, name);
+  const favoriteActionLabel = existingFavorite ? '☆ 즐겨찾기 업데이트' : '☆ 즐겨찾기 등록';
 
   function readFood() {
     setFormError('');
@@ -235,6 +236,8 @@ export default function RecordEditor({
                 <FavoriteFoods
                   foods={favoriteFoods}
                   disabled={busy}
+                  registerLabel={favoriteActionLabel}
+                  onRegister={() => void saveFavorite()}
                   onSelect={(food) => {
                     setName(food.name);
                     setAmount(String(food.calories));
@@ -353,7 +356,7 @@ export default function RecordEditor({
                 <Text style={s.caption}>영양소는 알고 있는 값만 입력해 주세요.</Text>
                 <View style={s.favoriteFoodActions}>
                   <Button
-                    label={existingFavorite ? '☆ 즐겨찾기 업데이트' : '☆ 즐겨찾기 등록'}
+                    label={favoriteActionLabel}
                     secondary
                     disabled={busy}
                     onPress={() => void saveFavorite()}
