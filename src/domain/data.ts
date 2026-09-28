@@ -27,6 +27,27 @@ export const MACRONUTRIENTS = [
   },
 ] as const;
 
+export const NUTRITION_METRICS = [
+  {
+    key: 'calories',
+    label: '칼로리',
+    goalLabel: '하루 목표 섭취 칼로리',
+    unit: 'kcal',
+    max: MAX_MEAL_CALORIES,
+  },
+  ...MACRONUTRIENTS.map(({ key, label }) => ({
+    key,
+    label,
+    goalLabel: `목표 ${label}`,
+    unit: 'g',
+    max: MAX_MACRONUTRIENT_GRAMS,
+  })),
+] as const;
+
+export type NutritionKey = (typeof NUTRITION_METRICS)[number]['key'];
+
+export type NutritionGoals = Partial<Record<NutritionKey, number>>;
+
 export function isMealAmount(value: unknown, max: number): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= max;
 }
@@ -52,7 +73,12 @@ export const MAX_WEIGHT_KG = 1000;
 
 export type Day = { meals: Meal[]; workouts: Workout[] };
 
-export type Store = { version: 1; days: Record<string, Day>; favoriteFoods?: FavoriteFood[] };
+export type Store = {
+  version: 1;
+  days: Record<string, Day>;
+  favoriteFoods?: FavoriteFood[];
+  nutritionGoals?: NutritionGoals;
+};
 
 export const STORAGE_KEY = 'harugyeol.v1';
 export const emptyDay = (): Day => ({
@@ -76,6 +102,27 @@ export function isDate(value: string): boolean {
 }
 const object = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
+
+export function parseNutritionGoals(value: unknown): NutritionGoals {
+  if (!object(value)) {
+    throw new Error('하루 섭취 목표 형식을 확인해 주세요.');
+  }
+  const goals: NutritionGoals = {};
+  for (const { key, goalLabel, max, unit } of NUTRITION_METRICS) {
+    const amount = value[key];
+    if (amount === undefined) {
+      continue;
+    }
+    if (!isMealAmount(amount, max)) {
+      throw new Error(
+        `${goalLabel}: 0~${max.toLocaleString()}${unit} 범위의 숫자를 입력해 주세요.`,
+      );
+    }
+    goals[key] = amount;
+  }
+  return goals;
+}
+
 const bounded = (v: unknown, max: number, zero = false): v is number =>
   typeof v === 'number' && Number.isFinite(v) && v >= (zero ? 0 : 0.1) && v <= max;
 const short = (v: unknown, max: number): v is string =>
@@ -93,6 +140,8 @@ export function parseStore(raw: string): Store {
   if (!object(data) || data.version !== 1 || !object(data.days)) {
     throw new Error('지원하지 않는 백업 형식입니다.');
   }
+  const nutritionGoals =
+    data.nutritionGoals === undefined ? {} : parseNutritionGoals(data.nutritionGoals);
   const favoriteFoods: FavoriteFood[] = [];
   if (data.favoriteFoods !== undefined) {
     if (!Array.isArray(data.favoriteFoods)) {
@@ -166,6 +215,7 @@ export function parseStore(raw: string): Store {
   const store = data as Store;
   return {
     version: 1,
+    ...(Object.keys(nutritionGoals).length > 0 ? { nutritionGoals } : {}),
     ...(favoriteFoods.length > 0 ? { favoriteFoods } : {}),
     days: Object.fromEntries(
       Object.entries(store.days).map(([date, day]) => [

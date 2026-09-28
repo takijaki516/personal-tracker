@@ -15,6 +15,7 @@ import Button from './Button';
 import ConfirmationDialog, { type Confirmation } from './ConfirmationDialog';
 import DailyRecords from './DailyRecords';
 import DateNavigation from './DateNavigation';
+import NutritionGoalsEditor from './NutritionGoalsEditor';
 import RecordEditor, { type Editor, type RecordKind } from './RecordEditor';
 import { styles as s } from './styles';
 import Toast from './Toast';
@@ -36,20 +37,26 @@ export default function TrackerScreen() {
     updateDay,
     saveFavoriteFood,
     removeFavoriteFood,
+    saveNutritionGoals,
     refresh,
   } = useTrackerRecords();
   const [date, setDate] = useState(localDate);
   const [editor, setEditor] = useState<Editor | null>(null);
+  const [goalsEditorOpen, setGoalsEditorOpen] = useState(false);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const recordsScroll = useRef<ScrollView | null>(null);
   const scrollOffset = useRef(0);
   const returnScrollOffset = useRef<number | null>(null);
-  const mealEditorOpen = editor?.kind === 'meal';
+  const pageOpen = editor?.kind === 'meal' || goalsEditorOpen;
   const day = data.days[date] ?? emptyDay();
 
   const closeEditor = useCallback(() => {
     Keyboard.dismiss();
     setEditor(null);
+  }, []);
+  const closeGoalsEditor = useCallback(() => {
+    Keyboard.dismiss();
+    setGoalsEditorOpen(false);
   }, []);
   const restoreRecordScroll = useCallback(() => {
     if (returnScrollOffset.current === null) {
@@ -62,7 +69,7 @@ export default function TrackerScreen() {
   }, []);
 
   useLayoutEffect(() => {
-    if (mealEditorOpen) {
+    if (pageOpen) {
       return;
     }
     restoreRecordScroll();
@@ -71,7 +78,7 @@ export default function TrackerScreen() {
       returnScrollOffset.current = null;
     });
     return () => cancelAnimationFrame(frame);
-  }, [mealEditorOpen, restoreRecordScroll]);
+  }, [pageOpen, restoreRecordScroll]);
 
   function openEditor(kind: RecordKind, id: string | null = null) {
     if (kind === 'meal') {
@@ -117,9 +124,9 @@ export default function TrackerScreen() {
     <SafeAreaView style={s.root}>
       <StatusBar barStyle="dark-content" />
       <View
-        style={[s.shell, mealEditorOpen && s.hidden]}
-        accessibilityElementsHidden={mealEditorOpen}
-        importantForAccessibility={mealEditorOpen ? 'no-hide-descendants' : 'auto'}
+        style={[s.shell, pageOpen && s.hidden]}
+        accessibilityElementsHidden={pageOpen}
+        importantForAccessibility={pageOpen ? 'no-hide-descendants' : 'auto'}
       >
         {wide && (
           <TrackerSidebar
@@ -134,13 +141,13 @@ export default function TrackerScreen() {
           contentContainerStyle={[s.content, !wide && { padding: 20 }]}
           keyboardShouldPersistTaps="handled"
           onScroll={(event) => {
-            if (!mealEditorOpen && returnScrollOffset.current === null) {
+            if (!pageOpen && returnScrollOffset.current === null) {
               scrollOffset.current = event.nativeEvent.contentOffset.y;
             }
           }}
           scrollEventThrottle={16}
           onLayout={() => {
-            if (!mealEditorOpen) {
+            if (!pageOpen) {
               restoreRecordScroll();
             }
           }}
@@ -158,15 +165,31 @@ export default function TrackerScreen() {
             <DailyRecords
               date={date}
               day={day}
+              nutritionGoals={data.nutritionGoals ?? {}}
               locked={locked}
+              onEditGoals={() => {
+                returnScrollOffset.current = scrollOffset.current;
+                setGoalsEditorOpen(true);
+              }}
               onEdit={openEditor}
               onRemove={remove}
             />
           </View>
-          <SyncPanel disabled={locked || !!editor || !!confirmation} onChange={refresh} />
+          <SyncPanel
+            disabled={locked || !!editor || goalsEditorOpen || !!confirmation}
+            onChange={refresh}
+          />
         </ScrollView>
       </View>
 
+      {goalsEditorOpen && (
+        <NutritionGoalsEditor
+          goals={data.nutritionGoals ?? {}}
+          busy={busy}
+          onSave={saveNutritionGoals}
+          onClose={closeGoalsEditor}
+        />
+      )}
       {editor && (
         <RecordEditor
           editor={editor}

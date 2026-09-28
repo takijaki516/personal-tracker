@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadRecords, saveRecords } from '../../application/record-repository';
-import { emptyStore, type Day, type FavoriteFood, type Store } from '../../domain/data';
+import {
+  emptyStore,
+  type Day,
+  type FavoriteFood,
+  type NutritionGoals,
+  type Store,
+} from '../../domain/data';
 import { upsertFavoriteFood } from '../../domain/favorite-foods';
 import { readStored, writeStored } from '../../infrastructure/platform';
 import { restoreStored } from '../../infrastructure/services';
@@ -129,6 +135,17 @@ export function useTrackerRecords() {
     );
   }
 
+  function saveNutritionGoals(nutritionGoals: NutritionGoals) {
+    return persist(
+      {
+        ...data,
+        nutritionGoals,
+      },
+      false,
+      '하루 섭취 목표 저장 성공',
+    );
+  }
+
   async function refresh() {
     if (!saving.current) {
       const revision = dataRevision.current;
@@ -151,6 +168,7 @@ export function useTrackerRecords() {
     updateDay,
     saveFavoriteFood,
     removeFavoriteFood,
+    saveNutritionGoals,
     persist,
     refresh,
   };

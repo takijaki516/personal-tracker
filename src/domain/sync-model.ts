@@ -3,6 +3,7 @@ import {
   emptyStore,
   isDate,
   parseStore,
+  parseNutritionGoals,
   type FavoriteFood,
   type Store,
   type Workout,
@@ -10,7 +11,7 @@ import {
 
 export type Entry = {
   date: string;
-  kind: 'meal' | 'workout' | 'favorite-food';
+  kind: 'meal' | 'workout' | 'favorite-food' | 'nutrition-goals';
   id: string;
   value: unknown;
   counter: number;
@@ -19,6 +20,8 @@ export type Entry = {
 };
 
 type LegacyWeightEntry = Omit<Entry, 'kind'> & { kind: 'weight' };
+
+export const NUTRITION_GOALS_ID = 'daily';
 
 export type SyncDocument = {
   schema: 1;
@@ -48,6 +51,10 @@ export function snapshot(doc: SyncDocument): Store {
   const store = emptyStore();
   for (const [, e] of Object.entries(doc.entries).sort(([a], [b]) => order(a, b))) {
     if (e.value === null) {
+      continue;
+    }
+    if (e.kind === 'nutrition-goals') {
+      store.nutritionGoals = parseNutritionGoals(e.value);
       continue;
     }
     if (e.kind === 'favorite-food') {
@@ -100,10 +107,11 @@ export function parseDocument(raw: string): SyncDocument {
     throw new Error('동기화 기록 수가 너무 많습니다.');
   }
   for (const [key, e] of Object.entries(d.entries) as [string, Entry | LegacyWeightEntry][]) {
+    const globalEntry = e?.kind === 'favorite-food' || e?.kind === 'nutrition-goals';
     if (
       !e ||
-      (e.kind === 'favorite-food' ? e.date !== '' : !isDate(e.date)) ||
-      !['meal', 'workout', 'weight', 'favorite-food'].includes(e.kind) ||
+      (globalEntry ? e.date !== '' : !isDate(e.date)) ||
+      !['meal', 'workout', 'weight', 'favorite-food', 'nutrition-goals'].includes(e.kind) ||
       !validId(e.id) ||
       !validId(e.device) ||
       !Number.isSafeInteger(e.counter) ||
@@ -114,6 +122,9 @@ export function parseDocument(raw: string): SyncDocument {
       key !== entryKey(e)
     ) {
       throw new Error('올바르지 않은 동기화 기록입니다.');
+    }
+    if (e.kind === 'nutrition-goals' && e.id !== NUTRITION_GOALS_ID) {
+      throw new Error('섭취 목표 기록 키가 올바르지 않습니다.');
     }
     if (e.kind === 'weight' && e.id !== 'weight') {
       throw new Error('체중 기록 키가 올바르지 않습니다.');
@@ -172,6 +183,19 @@ export function parseDocument(raw: string): SyncDocument {
 
 function flatten(store: Store): Record<string, Omit<Entry, 'counter' | 'device'>> {
   const result: ReturnType<typeof flatten> = {};
+  const goals = store.nutritionGoals === undefined ? {} : parseNutritionGoals(store.nutritionGoals);
+  if (Object.keys(goals).length > 0) {
+    const entry = {
+      date: '',
+      kind: 'nutrition-goals' as const,
+      id: NUTRITION_GOALS_ID,
+      value: {
+        id: NUTRITION_GOALS_ID,
+        ...goals,
+      },
+    };
+    result[entryKey(entry)] = entry;
+  }
   // Favorites belong to the whole library rather than a calendar day.
   for (const value of store.favoriteFoods ?? []) {
     const entry = {

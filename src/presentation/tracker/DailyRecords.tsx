@@ -1,19 +1,30 @@
 import { Text, View } from 'react-native';
-import { BODY_PARTS, MACRONUTRIENTS, type Day } from '../../domain/data';
+import { BODY_PARTS, MACRONUTRIENTS, type Day, type NutritionGoals } from '../../domain/data';
 import Button from './Button';
 import { formatDateWithWeekday } from './calendar';
+import NutritionSummary from './NutritionSummary';
 import type { RecordKind } from './RecordEditor';
 import { styles as s } from './styles';
 
 type Props = {
   date: string;
   day: Day;
+  nutritionGoals: NutritionGoals;
   locked: boolean;
+  onEditGoals: () => void;
   onEdit: (kind: RecordKind, id?: string) => void;
   onRemove: (kind: 'meals' | 'workouts', id: string) => void;
 };
 
-export default function DailyRecords({ date, day, locked, onEdit, onRemove }: Props) {
+export default function DailyRecords({
+  date,
+  day,
+  nutritionGoals,
+  locked,
+  onEditGoals,
+  onEdit,
+  onRemove,
+}: Props) {
   return (
     <>
       <Text style={[s.sectionTitle, s.recordDateTitle]}>{formatDateWithWeekday(date)}</Text>
@@ -22,6 +33,12 @@ export default function DailyRecords({ date, day, locked, onEdit, onRemove }: Pr
           <Text style={s.sectionTitle}>식단</Text>
           <Button label="＋ 식단 추가" disabled={locked} onPress={() => onEdit('meal')} />
         </View>
+        <NutritionSummary
+          meals={day.meals}
+          goals={nutritionGoals}
+          locked={locked}
+          onEditGoals={onEditGoals}
+        />
         {!day.meals.length ? (
           <View style={s.empty}>
             <Text style={s.caption}>기록이 없습니다.</Text>

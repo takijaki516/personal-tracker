@@ -169,6 +169,56 @@ export const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: '#fff',
   },
+  nutritionSummary: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderColor: '#eef0e9',
+  },
+  nutritionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginTop: 16,
+  },
+  nutritionMetric: {
+    flexGrow: 1,
+    flexBasis: 140,
+    minWidth: 0,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: '#f6f8f2',
+    gap: 4,
+  },
+  nutritionAmount: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#245d48',
+  },
+  nutritionProgressTrack: {
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#e2e8da',
+    overflow: 'hidden',
+    marginVertical: 4,
+  },
+  nutritionProgressFill: {
+    height: '100%',
+    backgroundColor: '#245d48',
+    borderRadius: 3,
+  },
+  nutritionProgressOver: {
+    backgroundColor: '#a87731',
+  },
+  nutritionOverText: {
+    color: '#936825',
+  },
+  nutritionGoalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginTop: 24,
+  },
   empty: {
     paddingVertical: 35,
     alignItems: 'center',

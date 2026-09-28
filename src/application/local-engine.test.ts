@@ -131,4 +131,49 @@ describe('local persistence and backups', () => {
     ).rejects.toThrow('즐겨찾는 음식 목록');
     expect(JSON.parse(await f.engine.read())).toEqual(favorites);
   });
+  it('preserves nutrition goals after a failed save and retries without duplicating changes', async () => {
+    const f = fixture();
+    const original = {
+      ...data,
+      nutritionGoals: {
+        calories: 2000,
+        protein: 150,
+      },
+    };
+    await f.engine.write(JSON.stringify(original));
+    const changed = {
+      ...original,
+      nutritionGoals: {
+        calories: 2200,
+        fat: 0,
+      },
+    };
+    f.commit.mockRejectedValueOnce(new Error('disk full'));
+    await expect(f.engine.write(JSON.stringify(changed))).rejects.toThrow('disk full');
+    expect(JSON.parse(await f.engine.read())).toEqual(original);
+    await f.engine.write(JSON.stringify(changed));
+    expect(JSON.parse(await f.engine.read())).toEqual(changed);
+    const saved = await f.engine.document();
+    await f.engine.write(JSON.stringify(changed));
+    expect(await f.engine.document()).toEqual(saved);
+  });
+  it('rejects invalid goal restores before creating a backup or replacing saved data', async () => {
+    const f = fixture();
+    const original = {
+      ...data,
+      nutritionGoals: { calories: 2000 },
+    };
+    await f.engine.write(JSON.stringify(original));
+    const saved = await f.engine.document();
+    const invalid = JSON.stringify({
+      ...data,
+      nutritionGoals: { protein: -1 },
+    });
+    await expect(f.engine.restore(invalid)).rejects.toThrow('목표 단백질');
+    expect(f.backup).not.toHaveBeenCalled();
+    expect(await f.engine.document()).toEqual(saved);
+    f.backup.mockRejectedValueOnce(new Error('backup failed'));
+    await expect(f.engine.restore(JSON.stringify(emptyStore()))).rejects.toThrow('backup failed');
+    expect(JSON.parse(await f.engine.read())).toEqual(original);
+  });
 });
