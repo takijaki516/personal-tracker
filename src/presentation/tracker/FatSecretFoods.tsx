@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { MACRONUTRIENTS } from '../../domain/data';
 import type { FoodSearchResult } from '../../domain/food-search';
 import { searchFoods } from '../../infrastructure/food-search';
@@ -57,9 +57,16 @@ export default function FatSecretFoods({ query, composing, onSelect }: Props) {
           <Text style={s.caption}>입력을 마치면 자동으로 검색해요.</Text>
         )}
         {visibleState.status === 'loading' && (
-          <Text accessibilityLiveRegion="polite" style={s.caption}>
-            FatSecret에서 음식 정보를 가져오고 있어요.
-          </Text>
+          <View style={s.foodSearchLoading} accessibilityState={{ busy: true }}>
+            <ActivityIndicator
+              accessibilityLabel="FatSecret 음식 정보 조회 중"
+              size="small"
+              color="#245d48"
+            />
+            <Text accessibilityLiveRegion="polite" style={s.body}>
+              FatSecret에서 음식 정보를 가져오고 있어요.
+            </Text>
+          </View>
         )}
         {visibleState.status === 'error' && (
           <>

@@ -305,6 +305,13 @@ export const styles = StyleSheet.create({
     gap: 8,
     alignItems: 'flex-start',
   },
+  foodSearchLoading: {
+    width: '100%',
+    minHeight: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
   favoriteFoods: {
     marginTop: 16,
   },
