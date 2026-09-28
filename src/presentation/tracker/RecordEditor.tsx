@@ -1,6 +1,15 @@
 import * as Crypto from 'expo-crypto';
-import { useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, Text, View } from 'react-native';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  BackHandler,
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 import {
   MACRONUTRIENTS,
   MAX_REPS,
@@ -21,6 +30,7 @@ import { formatDateWithWeekday } from './calendar';
 import FavoriteFoods from './FavoriteFoods';
 import Field from './Field';
 import FoodNameInput from './FoodNameInput';
+import FoodSelectionScreen from './FoodSelectionScreen';
 import { styles as s } from './styles';
 import { errorText, type SaveResult } from './useTrackerRecords';
 import WorkoutSelect from './WorkoutSelect';
@@ -82,8 +92,61 @@ export default function RecordEditor({
   const [formError, setFormError] = useState('');
   const [favoriteMessage, setFavoriteMessage] = useState('');
   const [selectedSearchFood, setSelectedSearchFood] = useState<FoodSearchResult | null>(null);
+  const [foodSelectionOpen, setFoodSelectionOpen] = useState(false);
+  const editorScroll = useRef<ScrollView | null>(null);
+  const scrollOffset = useRef(0);
+  const returnScrollOffset = useRef<number | null>(null);
   const existingFavorite = findFavoriteFood(favoriteFoods, name);
   const favoriteActionLabel = existingFavorite ? '☆ 즐겨찾기 업데이트' : '☆ 즐겨찾기 등록';
+
+  const closeFoodSelection = useCallback(() => {
+    Keyboard.dismiss();
+    setFoodSelectionOpen(false);
+  }, []);
+  const restoreEditorScroll = useCallback(() => {
+    if (returnScrollOffset.current === null) {
+      return;
+    }
+    editorScroll.current?.scrollTo({
+      y: returnScrollOffset.current,
+      animated: false,
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (foodSelectionOpen) {
+      return;
+    }
+    restoreEditorScroll();
+    const frame = requestAnimationFrame(() => {
+      restoreEditorScroll();
+      returnScrollOffset.current = null;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [foodSelectionOpen, restoreEditorScroll]);
+  useEffect(() => {
+    if (editor.kind !== 'meal') {
+      return;
+    }
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (!busy) {
+        if (foodSelectionOpen) {
+          closeFoodSelection();
+        } else {
+          onClose();
+        }
+      }
+      return true;
+    });
+    return () => subscription.remove();
+  }, [editor.kind, busy, foodSelectionOpen, closeFoodSelection, onClose]);
+
+  function openFoodSelection() {
+    if (!busy) {
+      returnScrollOffset.current = scrollOffset.current;
+      setFoodSelectionOpen(true);
+    }
+  }
 
   function selectFood(food: Omit<FavoriteFood, 'id'>) {
     setName(food.name);
@@ -220,6 +283,35 @@ export default function RecordEditor({
     }
   }
 
+  const foodSelection = editor.kind === 'meal' && foodSelectionOpen && (
+    <FoodSelectionScreen
+      name={name}
+      date={editor.date}
+      days={days}
+      favoriteFoods={favoriteFoods}
+      disabled={busy}
+      onClose={closeFoodSelection}
+      onNameSelect={(value) => {
+        setName(value);
+        if (value !== name) {
+          setSelectedSearchFood(null);
+        }
+        setFormError('');
+        setFavoriteMessage('');
+        closeFoodSelection();
+      }}
+      onSelect={(food) => {
+        selectFood(food);
+        closeFoodSelection();
+      }}
+      onSearchSelect={(food) => {
+        selectFood(foodSearchSelection(food));
+        setSelectedSearchFood(food);
+        closeFoodSelection();
+      }}
+    />
+  );
+
   const form = (
     <>
       {editor.kind === 'meal' && (
@@ -253,21 +345,7 @@ export default function RecordEditor({
             onSelect={selectFood}
             onRemove={(id) => void removeFavorite(id)}
           />
-          <FoodNameInput
-            value={name}
-            days={days}
-            favoriteFoods={favoriteFoods}
-            disabled={busy}
-            onChangeText={(value) => {
-              setName(value);
-              setSelectedSearchFood(null);
-            }}
-            onSelect={selectFood}
-            onSearchSelect={(food) => {
-              selectFood(foodSearchSelection(food));
-              setSelectedSearchFood(food);
-            }}
-          />
+          <FoodNameInput value={name} disabled={busy} onOpen={openFoodSelection} />
         </>
       )}
       {editor.kind === 'workout' && (
@@ -421,34 +499,51 @@ export default function RecordEditor({
 
   if (editor.kind === 'meal') {
     return (
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={s.editorScreen}
-      >
-        <View style={s.editorHeader}>
-          <View style={s.editorHeaderContent}>
-            <Button
-              label="‹ 뒤로"
-              accessibilityLabel="식단 기록으로 돌아가기"
-              disabled={busy}
-              onPress={onClose}
-            />
-            <View style={{ flex: 1 }}>
-              <Text accessibilityRole="header" style={s.sectionTitle}>
-                {editor.id ? '식단 수정' : '식단 추가'}
-              </Text>
-              <Text style={s.caption}>{formatDateWithWeekday(editor.date)}</Text>
+      <>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={[s.editorScreen, foodSelectionOpen && s.hidden]}
+          accessibilityElementsHidden={foodSelectionOpen}
+          importantForAccessibility={foodSelectionOpen ? 'no-hide-descendants' : 'auto'}
+        >
+          <View style={s.editorHeader}>
+            <View style={s.editorHeaderContent}>
+              <Button
+                label="‹ 뒤로"
+                accessibilityLabel="식단 기록으로 돌아가기"
+                disabled={busy}
+                onPress={onClose}
+              />
+              <View style={{ flex: 1 }}>
+                <Text accessibilityRole="header" style={s.sectionTitle}>
+                  {editor.id ? '식단 수정' : '식단 추가'}
+                </Text>
+                <Text style={s.caption}>{formatDateWithWeekday(editor.date)}</Text>
+              </View>
             </View>
           </View>
-        </View>
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={s.editorContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          {form}
-        </ScrollView>
-      </KeyboardAvoidingView>
+          <ScrollView
+            ref={editorScroll}
+            style={{ flex: 1 }}
+            contentContainerStyle={s.editorContent}
+            keyboardShouldPersistTaps="handled"
+            onScroll={(event) => {
+              if (returnScrollOffset.current === null) {
+                scrollOffset.current = event.nativeEvent.contentOffset.y;
+              }
+            }}
+            scrollEventThrottle={16}
+            onLayout={() => {
+              if (!foodSelectionOpen) {
+                restoreEditorScroll();
+              }
+            }}
+          >
+            {form}
+          </ScrollView>
+        </KeyboardAvoidingView>
+        {foodSelection}
+      </>
     );
   }
 

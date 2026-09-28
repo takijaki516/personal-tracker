@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  BackHandler,
   Keyboard,
   ScrollView,
   StatusBar,
@@ -73,19 +72,6 @@ export default function TrackerScreen() {
     });
     return () => cancelAnimationFrame(frame);
   }, [mealEditorOpen, restoreRecordScroll]);
-
-  useEffect(() => {
-    if (!mealEditorOpen) {
-      return;
-    }
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (!busy) {
-        closeEditor();
-      }
-      return true;
-    });
-    return () => subscription.remove();
-  }, [mealEditorOpen, busy, closeEditor]);
 
   function openEditor(kind: RecordKind, id: string | null = null) {
     if (kind === 'meal') {

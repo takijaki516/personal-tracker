@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { MACRONUTRIENTS } from '../../domain/data';
 import type { FoodSearchResult } from '../../domain/food-search';
 import { searchFoods } from '../../infrastructure/food-search';
@@ -81,11 +81,7 @@ export default function FatSecretFoods({ query, composing, onSelect }: Props) {
       </View>
       {visibleState.status === 'success' && visibleState.foods.length > 0 && (
         <>
-          <ScrollView
-            style={s.foodSearchOptions}
-            nestedScrollEnabled
-            keyboardShouldPersistTaps="handled"
-          >
+          <View>
             {visibleState.foods.map((food, index) => (
               <Pressable
                 key={`${food.sourceUrl}:${index}`}
@@ -107,7 +103,7 @@ export default function FatSecretFoods({ query, composing, onSelect }: Props) {
                 </Text>
               </Pressable>
             ))}
-          </ScrollView>
+          </View>
           <Text style={[s.caption, s.foodSuggestionsEmpty]}>
             표시된 제공량 기준이에요. 선택한 뒤 섭취량에 맞게 값을 조정해 주세요.
           </Text>

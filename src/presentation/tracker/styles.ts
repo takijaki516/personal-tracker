@@ -66,6 +66,15 @@ export const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 40,
   },
+  foodSelectionQuery: {
+    paddingTop: 0,
+    paddingBottom: 16,
+    gap: 8,
+  },
+  foodSelectionSections: {
+    paddingTop: 16,
+    gap: 16,
+  },
   eyebrow: {
     fontSize: 10,
     letterSpacing: 2.5,
@@ -281,9 +290,6 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 12,
     backgroundColor: '#e7eedc',
   },
-  foodSuggestionsOptions: {
-    maxHeight: 120,
-  },
   foodSuggestionOption: {
     minHeight: 56,
     paddingVertical: 8,
@@ -298,9 +304,6 @@ export const styles = StyleSheet.create({
     padding: 12,
     gap: 8,
     alignItems: 'flex-start',
-  },
-  foodSearchOptions: {
-    maxHeight: 230,
   },
   favoriteFoods: {
     marginTop: 16,
