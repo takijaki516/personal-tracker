@@ -263,10 +263,16 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 12,
     minHeight: 48,
     paddingHorizontal: 14,
     paddingVertical: 10,
     backgroundColor: '#f6f8f2',
+  },
+  mealSectionTitle: {
+    flex: 1,
+    minWidth: 0,
+    lineHeight: 22,
   },
   mealSectionArrow: {
     fontSize: 18,
