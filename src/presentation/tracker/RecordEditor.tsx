@@ -512,7 +512,7 @@ export default function RecordEditor({
               />
               <View style={{ flex: 1 }}>
                 <Text accessibilityRole="header" style={s.sectionTitle}>
-                  {editor.id ? '식단 수정' : '식단 추가'}
+                  식단 수정
                 </Text>
                 <Text style={s.caption}>{formatDateWithWeekday(editor.date)}</Text>
               </View>
