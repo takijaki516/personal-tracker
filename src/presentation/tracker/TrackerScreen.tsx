@@ -135,51 +135,57 @@ export default function TrackerScreen() {
             }}
           />
         )}
-        <ScrollView
-          ref={recordsScroll}
-          style={{ flex: 1 }}
-          contentContainerStyle={[s.content, !wide && { padding: 20 }]}
-          keyboardShouldPersistTaps="handled"
-          onScroll={(event) => {
-            if (!pageOpen && returnScrollOffset.current === null) {
-              scrollOffset.current = event.nativeEvent.contentOffset.y;
-            }
-          }}
-          scrollEventThrottle={16}
-          onLayout={() => {
-            if (!pageOpen) {
-              restoreRecordScroll();
-            }
-          }}
-        >
-          <DateNavigation date={date} onDateChange={setDate} />
-          {!!message && (
-            <View style={s.notice}>
-              <Text accessibilityLiveRegion="polite" style={[s.body, { flex: 1 }]}>
-                {message}
-              </Text>
-              <Button label="닫기" onPress={() => setMessage('')} />
+        <View style={s.main}>
+          <View style={s.homeHeader}>
+            <View style={[s.homeHeaderContent, !wide && { paddingHorizontal: 20 }]}>
+              <DateNavigation date={date} onDateChange={setDate} />
             </View>
-          )}
-          <View style={s.columns}>
-            <DailyRecords
-              date={date}
-              day={day}
-              nutritionGoals={data.nutritionGoals ?? {}}
-              locked={locked}
-              onEditGoals={() => {
-                returnScrollOffset.current = scrollOffset.current;
-                setGoalsEditorOpen(true);
-              }}
-              onEdit={openEditor}
-              onRemove={remove}
-            />
           </View>
-          <SyncPanel
-            disabled={locked || !!editor || goalsEditorOpen || !!confirmation}
-            onChange={refresh}
-          />
-        </ScrollView>
+          <ScrollView
+            ref={recordsScroll}
+            style={{ flex: 1 }}
+            contentContainerStyle={[s.content, !wide && { padding: 20 }]}
+            keyboardShouldPersistTaps="handled"
+            onScroll={(event) => {
+              if (!pageOpen && returnScrollOffset.current === null) {
+                scrollOffset.current = event.nativeEvent.contentOffset.y;
+              }
+            }}
+            scrollEventThrottle={16}
+            onLayout={() => {
+              if (!pageOpen) {
+                restoreRecordScroll();
+              }
+            }}
+          >
+            {!!message && (
+              <View style={s.notice}>
+                <Text accessibilityLiveRegion="polite" style={[s.body, { flex: 1 }]}>
+                  {message}
+                </Text>
+                <Button label="닫기" onPress={() => setMessage('')} />
+              </View>
+            )}
+            <View style={s.columns}>
+              <DailyRecords
+                date={date}
+                day={day}
+                nutritionGoals={data.nutritionGoals ?? {}}
+                locked={locked}
+                onEditGoals={() => {
+                  returnScrollOffset.current = scrollOffset.current;
+                  setGoalsEditorOpen(true);
+                }}
+                onEdit={openEditor}
+                onRemove={remove}
+              />
+            </View>
+            <SyncPanel
+              disabled={locked || !!editor || goalsEditorOpen || !!confirmation}
+              onChange={refresh}
+            />
+          </ScrollView>
+        </View>
       </View>
 
       {goalsEditorOpen && (

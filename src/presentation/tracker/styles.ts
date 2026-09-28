@@ -9,6 +9,24 @@ export const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
   },
+  main: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 0,
+  },
+  homeHeader: {
+    flexShrink: 0,
+    backgroundColor: '#fbfcf8',
+    borderBottomWidth: 1,
+    borderColor: '#e2e7dd',
+  },
+  homeHeaderContent: {
+    width: '100%',
+    maxWidth: 1350,
+    alignSelf: 'center',
+    paddingHorizontal: 40,
+    paddingVertical: 12,
+  },
   loading: {
     flex: 1,
     alignItems: 'center',
@@ -119,7 +137,7 @@ export const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    gap: 8,
   },
   button: {
     paddingVertical: 12,
