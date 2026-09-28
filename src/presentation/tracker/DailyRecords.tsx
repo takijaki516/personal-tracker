@@ -66,7 +66,9 @@ export default function DailyRecords({
         <View style={s.card}>
           <View style={s.between}>
             <Text style={s.sectionTitle}>운동</Text>
-            <Button label="＋ 운동 추가" disabled={locked} onPress={() => onEdit('workout')} />
+            {editable && (
+              <Button label="＋ 운동 추가" disabled={locked} onPress={() => onEdit('workout')} />
+            )}
           </View>
           {!day.workouts.length ? (
             <View style={s.empty}>
@@ -88,18 +90,22 @@ export default function DailyRecords({
                     </Text>
                   ))}
                 </View>
-                <Button
-                  label="수정"
-                  secondary
-                  disabled={locked}
-                  onPress={() => onEdit('workout', w.id)}
-                />
-                <Button
-                  label="삭제"
-                  danger
-                  disabled={locked}
-                  onPress={() => onRemove('workouts', w.id)}
-                />
+                {editable && (
+                  <>
+                    <Button
+                      label="수정"
+                      secondary
+                      disabled={locked}
+                      onPress={() => onEdit('workout', w.id)}
+                    />
+                    <Button
+                      label="삭제"
+                      danger
+                      disabled={locked}
+                      onPress={() => onRemove('workouts', w.id)}
+                    />
+                  </>
+                )}
               </View>
             ))
           )}
