@@ -2,11 +2,16 @@ import * as Crypto from 'expo-crypto';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, Text, View } from 'react-native';
 import {
+  isMealAmount,
+  MACRONUTRIENTS,
+  MAX_MACRONUTRIENT_GRAMS,
+  MAX_MEAL_CALORIES,
   MAX_REPS,
   MAX_WEIGHT_KG,
   MAX_WORKOUT_SETS,
   type BodyPart,
   type Day,
+  type Meal,
   type WorkoutSet,
 } from '../../domain/data';
 import { WORKOUT_OPTIONS } from '../../domain/workout-options';
@@ -38,6 +43,11 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
   const item = meal ?? workout;
   const [name, setName] = useState(item?.name ?? '');
   const [amount, setAmount] = useState(meal ? String(meal.calories) : '');
+  const [macros, setMacros] = useState(() => ({
+    carbohydrates: meal?.carbohydrates?.toString() ?? '',
+    protein: meal?.protein?.toString() ?? '',
+    fat: meal?.fat?.toString() ?? '',
+  }));
   const [slot, setSlot] = useState(meal?.slot ?? '아침');
   const [bodyPart, setBodyPart] = useState<BodyPart | null>(workout?.bodyPart ?? null);
   const [sets, setSets] = useState<SetInput[]>(
@@ -73,16 +83,32 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
         return;
       }
       const calories = Number(amount.trim());
-      if (!amount.trim() || !Number.isFinite(calories) || calories < 0 || calories > 20000) {
-        setFormError('칼로리 0~20,000 범위로 입력해 주세요.');
+      if (!amount.trim() || !isMealAmount(calories, MAX_MEAL_CALORIES)) {
+        setFormError(
+          `총 칼로리를 0~${MAX_MEAL_CALORIES.toLocaleString()}kcal 범위로 입력해 주세요.`,
+        );
         return;
       }
-      const item = {
+      const item: Meal = {
         id: editor.id ?? Crypto.randomUUID(),
         name: name.trim(),
         calories,
         slot,
       };
+      for (const { key, label } of MACRONUTRIENTS) {
+        const input = macros[key].trim();
+        if (!input) {
+          continue;
+        }
+        const grams = Number(input);
+        if (!isMealAmount(grams, MAX_MACRONUTRIENT_GRAMS)) {
+          setFormError(
+            `${label}을 0~${MAX_MACRONUTRIENT_GRAMS.toLocaleString()}g 범위로 입력해 주세요.`,
+          );
+          return;
+        }
+        item[key] = grams;
+      }
       next.meals = editor.id
         ? current.meals.map((m) => (m.id === editor.id ? item : m))
         : [...current.meals, item];
@@ -238,13 +264,31 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
               </>
             )}
             {editor.kind === 'meal' && (
-              <Field
-                label="칼로리 (kcal)"
-                value={amount}
-                onChangeText={setAmount}
-                numeric
-                maxLength={10}
-              />
+              <>
+                <Field
+                  label="총 칼로리 (kcal)"
+                  value={amount}
+                  onChangeText={setAmount}
+                  numeric
+                  maxLength={10}
+                />
+                {MACRONUTRIENTS.map(({ key, label }) => (
+                  <Field
+                    key={key}
+                    label={`${label} (g)`}
+                    value={macros[key]}
+                    onChangeText={(value) =>
+                      setMacros((current) => ({
+                        ...current,
+                        [key]: value,
+                      }))
+                    }
+                    numeric
+                    maxLength={10}
+                  />
+                ))}
+                <Text style={s.caption}>영양소는 알고 있는 값만 입력해 주세요.</Text>
+              </>
             )}
             {!!formError && (
               <Text accessibilityRole="alert" style={s.error}>

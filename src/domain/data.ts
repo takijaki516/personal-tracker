@@ -1,4 +1,33 @@
-export type Meal = { id: string; name: string; slot: string; calories: number };
+export type Meal = {
+  id: string;
+  name: string;
+  slot: string;
+  calories: number;
+  carbohydrates?: number;
+  protein?: number;
+  fat?: number;
+};
+
+export const MAX_MEAL_CALORIES = 20000;
+export const MAX_MACRONUTRIENT_GRAMS = 5000;
+export const MACRONUTRIENTS = [
+  {
+    key: 'carbohydrates',
+    label: '탄수화물',
+  },
+  {
+    key: 'protein',
+    label: '단백질',
+  },
+  {
+    key: 'fat',
+    label: '지방',
+  },
+] as const;
+
+export function isMealAmount(value: unknown, max: number): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= max;
+}
 
 export const BODY_PARTS = {
   chest: 'Chest',
@@ -72,7 +101,10 @@ export function parseStore(raw: string): Store {
         ids.has(meal.id) ||
         !short(meal.name, 100) ||
         !['아침', '점심', '저녁', '간식'].includes(String(meal.slot)) ||
-        !bounded(meal.calories, 20000, true)
+        !isMealAmount(meal.calories, MAX_MEAL_CALORIES) ||
+        MACRONUTRIENTS.some(
+          ({ key }) => meal[key] !== undefined && !isMealAmount(meal[key], MAX_MACRONUTRIENT_GRAMS),
+        )
       ) {
         throw new Error('식단 기록을 확인해 주세요.');
       }

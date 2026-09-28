@@ -1,5 +1,5 @@
 import { Text, View } from 'react-native';
-import { BODY_PARTS, type Day } from '../../domain/data';
+import { BODY_PARTS, MACRONUTRIENTS, type Day } from '../../domain/data';
 import Button from './Button';
 import { formatDateWithWeekday } from './calendar';
 import type { RecordKind } from './RecordEditor';
@@ -32,7 +32,12 @@ export default function DailyRecords({ date, day, locked, onEdit, onRemove }: Pr
               <Text style={s.tag}>{m.slot}</Text>
               <View style={{ flex: 1 }}>
                 <Text style={s.body}>{m.name}</Text>
-                <Text style={s.caption}>{m.calories} kcal</Text>
+                <Text style={s.caption}>총 칼로리 {m.calories} kcal</Text>
+                {MACRONUTRIENTS.map(({ key, label }) => (
+                  <Text key={key} style={s.caption}>
+                    {label} {m[key] === undefined ? '미입력' : `${m[key]} g`}
+                  </Text>
+                ))}
               </View>
               <Button
                 label="수정"
