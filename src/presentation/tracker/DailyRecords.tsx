@@ -29,6 +29,8 @@ export default function DailyRecords({
   onEdit,
   onRemove,
 }: Props) {
+  const editable = tab !== 'home';
+
   return (
     <>
       <Text style={[s.sectionTitle, s.recordDateTitle]}>{formatDateWithWeekday(date)}</Text>
@@ -36,11 +38,14 @@ export default function DailyRecords({
         <View style={s.card}>
           <View style={s.between}>
             <Text style={s.sectionTitle}>식단</Text>
-            <Button label="식단 수정" disabled={locked} onPress={() => onEdit('meal')} />
+            {editable && (
+              <Button label="식단 수정" disabled={locked} onPress={() => onEdit('meal')} />
+            )}
           </View>
           <NutritionSummary
             meals={day.meals}
             goals={nutritionGoals}
+            editable={editable}
             locked={locked}
             onEditGoals={onEditGoals}
           />

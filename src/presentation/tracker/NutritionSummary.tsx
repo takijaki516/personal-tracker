@@ -7,13 +7,14 @@ import { styles as s } from './styles';
 type Props = {
   meals: Meal[];
   goals: NutritionGoals;
+  editable: boolean;
   locked: boolean;
   onEditGoals: () => void;
 };
 
 const formatAmount = (value: number) => value.toLocaleString('ko-KR', { maximumFractionDigits: 2 });
 
-export default function NutritionSummary({ meals, goals, locked, onEditGoals }: Props) {
+export default function NutritionSummary({ meals, goals, editable, locked, onEditGoals }: Props) {
   const hasGoals = Object.keys(goals).length > 0;
 
   return (
@@ -23,12 +24,14 @@ export default function NutritionSummary({ meals, goals, locked, onEditGoals }: 
           <Text style={s.label}>하루 섭취량</Text>
           <Text style={s.caption}>선택한 날짜의 식단 합계</Text>
         </View>
-        <Button
-          label={hasGoals ? '목표 수정' : '목표 설정'}
-          secondary
-          disabled={locked}
-          onPress={onEditGoals}
-        />
+        {editable && (
+          <Button
+            label={hasGoals ? '목표 수정' : '목표 설정'}
+            secondary
+            disabled={locked}
+            onPress={onEditGoals}
+          />
+        )}
       </View>
       <View style={s.nutritionGrid}>
         {getDailyNutrition(meals).map(({ key, label, unit, consumed, missing }) => {
