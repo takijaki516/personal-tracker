@@ -37,6 +37,35 @@ export const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingBottom: 45,
   },
+  hidden: {
+    display: 'none',
+  },
+  editorScreen: {
+    flex: 1,
+  },
+  editorHeader: {
+    backgroundColor: '#fbfcf8',
+    borderBottomWidth: 1,
+    borderColor: '#e2e7dd',
+  },
+  editorHeaderContent: {
+    width: '100%',
+    maxWidth: 780,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  editorContent: {
+    width: '100%',
+    maxWidth: 780,
+    alignSelf: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 40,
+  },
   eyebrow: {
     fontSize: 10,
     letterSpacing: 2.5,

@@ -17,6 +17,7 @@ import { findFavoriteFood, parseFoodInput } from '../../domain/favorite-foods';
 import { foodSearchSelection, type FoodSearchResult } from '../../domain/food-search';
 import { WORKOUT_OPTIONS } from '../../domain/workout-options';
 import Button from './Button';
+import { formatDateWithWeekday } from './calendar';
 import FavoriteFoods from './FavoriteFoods';
 import Field from './Field';
 import FoodNameInput from './FoodNameInput';
@@ -219,6 +220,238 @@ export default function RecordEditor({
     }
   }
 
+  const form = (
+    <>
+      {editor.kind === 'meal' && (
+        <View
+          style={[
+            s.row,
+            {
+              marginTop: 15,
+              flexWrap: 'wrap',
+            },
+          ]}
+        >
+          {['아침', '점심', '저녁', '간식'].map((t) => (
+            <Button
+              key={t}
+              label={t}
+              selected={slot === t}
+              disabled={busy}
+              onPress={() => setSlot(t)}
+            />
+          ))}
+        </View>
+      )}
+      {editor.kind === 'meal' && (
+        <>
+          <FavoriteFoods
+            foods={favoriteFoods}
+            disabled={busy}
+            registerLabel={favoriteActionLabel}
+            onRegister={() => void saveFavorite()}
+            onSelect={selectFood}
+            onRemove={(id) => void removeFavorite(id)}
+          />
+          <FoodNameInput
+            value={name}
+            days={days}
+            favoriteFoods={favoriteFoods}
+            disabled={busy}
+            onChangeText={(value) => {
+              setName(value);
+              setSelectedSearchFood(null);
+            }}
+            onSelect={selectFood}
+            onSearchSelect={(food) => {
+              selectFood(foodSearchSelection(food));
+              setSelectedSearchFood(food);
+            }}
+          />
+        </>
+      )}
+      {editor.kind === 'workout' && (
+        <>
+          <WorkoutSelect
+            name={name}
+            bodyPart={bodyPart}
+            options={WORKOUT_OPTIONS}
+            disabled={busy}
+            onBodyPartChange={(part) => {
+              if (part !== bodyPart) {
+                setName('');
+              }
+              setBodyPart(part);
+              setFormError('');
+            }}
+            onSelect={(option) => {
+              setName(option.name);
+              setBodyPart(option.bodyPart);
+              setFormError('');
+            }}
+          />
+          <Text style={[s.label, { marginTop: 20 }]}>세트 ({sets.length})</Text>
+          {sets.map((set, index) => (
+            <View key={index} style={s.workoutSet}>
+              <View style={s.between}>
+                <Text style={s.body}>{index + 1}세트</Text>
+                {sets.length > 1 && (
+                  <Button
+                    label="세트 삭제"
+                    disabled={busy}
+                    onPress={() => setSets((current) => current.filter((_, i) => i !== index))}
+                  />
+                )}
+              </View>
+              <View style={s.workoutSetFields}>
+                <View style={s.workoutSetField}>
+                  <Field
+                    label="횟수 (reps)"
+                    value={set.reps}
+                    onChangeText={(value) => updateSet(index, 'reps', value)}
+                    numeric
+                    maxLength={4}
+                  />
+                </View>
+                <View style={s.workoutSetField}>
+                  <Field
+                    label="중량 (kg)"
+                    value={set.weightKg}
+                    onChangeText={(value) => updateSet(index, 'weightKg', value)}
+                    numeric
+                    maxLength={7}
+                  />
+                </View>
+              </View>
+              <Text style={s.caption}>0kg은 Body weight로 표시됩니다.</Text>
+            </View>
+          ))}
+          <Button
+            label="＋ 세트 추가"
+            disabled={busy || sets.length >= MAX_WORKOUT_SETS}
+            onPress={() =>
+              setSets((current) => [
+                ...current,
+                {
+                  reps: '',
+                  weightKg: '',
+                },
+              ])
+            }
+          />
+        </>
+      )}
+      {editor.kind === 'meal' && (
+        <>
+          {selectedSearchFood && (
+            <Text style={[s.caption, { marginTop: 12 }]}>
+              FatSecret · {selectedSearchFood.servingText} 기준 영양정보입니다. 섭취량이 다르면 아래
+              값을 조정해 주세요.
+            </Text>
+          )}
+          <Field
+            label="총 칼로리 (kcal)"
+            value={amount}
+            onChangeText={setAmount}
+            numeric
+            maxLength={10}
+            disabled={busy}
+          />
+          {MACRONUTRIENTS.map(({ key, label }) => (
+            <Field
+              key={key}
+              label={`${label} (g)`}
+              value={macros[key]}
+              onChangeText={(value) =>
+                setMacros((current) => ({
+                  ...current,
+                  [key]: value,
+                }))
+              }
+              numeric
+              maxLength={10}
+              disabled={busy}
+            />
+          ))}
+          <Text style={s.caption}>영양소는 알고 있는 값만 입력해 주세요.</Text>
+          <View style={s.favoriteFoodActions}>
+            <Button
+              label={favoriteActionLabel}
+              secondary
+              disabled={busy}
+              onPress={() => void saveFavorite()}
+            />
+            <Text style={s.caption}>
+              {existingFavorite
+                ? '같은 이름의 음식에 현재 칼로리와 영양소를 저장합니다.'
+                : '현재 음식과 칼로리·영양소를 저장해 다음 기록에 사용할 수 있어요.'}
+            </Text>
+            {!!favoriteMessage && (
+              <Text accessibilityLiveRegion="polite" style={s.body}>
+                {favoriteMessage}
+              </Text>
+            )}
+          </View>
+        </>
+      )}
+      {!!formError && (
+        <Text accessibilityRole="alert" style={s.error}>
+          {formError}
+        </Text>
+      )}
+      <View
+        style={[
+          s.row,
+          {
+            justifyContent: 'flex-end',
+            marginTop: 24,
+          },
+        ]}
+      >
+        <Button label="취소" disabled={busy} onPress={() => onClose()} />
+        <Button
+          label={busy ? '저장 중…' : '기록 저장'}
+          primary
+          disabled={busy}
+          onPress={() => void submit()}
+        />
+      </View>
+    </>
+  );
+
+  if (editor.kind === 'meal') {
+    return (
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={s.editorScreen}
+      >
+        <View style={s.editorHeader}>
+          <View style={s.editorHeaderContent}>
+            <Button
+              label="‹ 뒤로"
+              accessibilityLabel="식단 기록으로 돌아가기"
+              disabled={busy}
+              onPress={onClose}
+            />
+            <View style={{ flex: 1 }}>
+              <Text accessibilityRole="header" style={s.sectionTitle}>
+                {editor.id ? '식단 수정' : '식단 추가'}
+              </Text>
+              <Text style={s.caption}>{formatDateWithWeekday(editor.date)}</Text>
+            </View>
+          </View>
+        </View>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={s.editorContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          {form}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
   return (
     <Modal visible transparent animationType="fade" onRequestClose={() => !busy && onClose()}>
       <KeyboardAvoidingView
@@ -227,204 +460,9 @@ export default function RecordEditor({
       >
         <View style={s.modal} accessibilityViewIsModal>
           <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-            <Text style={s.sectionTitle}>{editor.kind === 'meal' ? '식단' : '운동'} 기록</Text>
+            <Text style={s.sectionTitle}>운동 기록</Text>
             <Text style={s.caption}>{editor.date}</Text>
-            {editor.kind === 'meal' && (
-              <View
-                style={[
-                  s.row,
-                  {
-                    marginTop: 15,
-                    flexWrap: 'wrap',
-                  },
-                ]}
-              >
-                {['아침', '점심', '저녁', '간식'].map((t) => (
-                  <Button
-                    key={t}
-                    label={t}
-                    selected={slot === t}
-                    disabled={busy}
-                    onPress={() => setSlot(t)}
-                  />
-                ))}
-              </View>
-            )}
-            {editor.kind === 'meal' && (
-              <>
-                <FavoriteFoods
-                  foods={favoriteFoods}
-                  disabled={busy}
-                  registerLabel={favoriteActionLabel}
-                  onRegister={() => void saveFavorite()}
-                  onSelect={selectFood}
-                  onRemove={(id) => void removeFavorite(id)}
-                />
-                <FoodNameInput
-                  value={name}
-                  days={days}
-                  favoriteFoods={favoriteFoods}
-                  disabled={busy}
-                  onChangeText={(value) => {
-                    setName(value);
-                    setSelectedSearchFood(null);
-                  }}
-                  onSelect={selectFood}
-                  onSearchSelect={(food) => {
-                    selectFood(foodSearchSelection(food));
-                    setSelectedSearchFood(food);
-                  }}
-                />
-              </>
-            )}
-            {editor.kind === 'workout' && (
-              <>
-                <WorkoutSelect
-                  name={name}
-                  bodyPart={bodyPart}
-                  options={WORKOUT_OPTIONS}
-                  disabled={busy}
-                  onBodyPartChange={(part) => {
-                    if (part !== bodyPart) {
-                      setName('');
-                    }
-                    setBodyPart(part);
-                    setFormError('');
-                  }}
-                  onSelect={(option) => {
-                    setName(option.name);
-                    setBodyPart(option.bodyPart);
-                    setFormError('');
-                  }}
-                />
-                <Text style={[s.label, { marginTop: 20 }]}>세트 ({sets.length})</Text>
-                {sets.map((set, index) => (
-                  <View key={index} style={s.workoutSet}>
-                    <View style={s.between}>
-                      <Text style={s.body}>{index + 1}세트</Text>
-                      {sets.length > 1 && (
-                        <Button
-                          label="세트 삭제"
-                          disabled={busy}
-                          onPress={() =>
-                            setSets((current) => current.filter((_, i) => i !== index))
-                          }
-                        />
-                      )}
-                    </View>
-                    <View style={s.workoutSetFields}>
-                      <View style={s.workoutSetField}>
-                        <Field
-                          label="횟수 (reps)"
-                          value={set.reps}
-                          onChangeText={(value) => updateSet(index, 'reps', value)}
-                          numeric
-                          maxLength={4}
-                        />
-                      </View>
-                      <View style={s.workoutSetField}>
-                        <Field
-                          label="중량 (kg)"
-                          value={set.weightKg}
-                          onChangeText={(value) => updateSet(index, 'weightKg', value)}
-                          numeric
-                          maxLength={7}
-                        />
-                      </View>
-                    </View>
-                    <Text style={s.caption}>0kg은 Body weight로 표시됩니다.</Text>
-                  </View>
-                ))}
-                <Button
-                  label="＋ 세트 추가"
-                  disabled={busy || sets.length >= MAX_WORKOUT_SETS}
-                  onPress={() =>
-                    setSets((current) => [
-                      ...current,
-                      {
-                        reps: '',
-                        weightKg: '',
-                      },
-                    ])
-                  }
-                />
-              </>
-            )}
-            {editor.kind === 'meal' && (
-              <>
-                {selectedSearchFood && (
-                  <Text style={[s.caption, { marginTop: 12 }]}>
-                    FatSecret · {selectedSearchFood.servingText} 기준 영양정보입니다. 섭취량이
-                    다르면 아래 값을 조정해 주세요.
-                  </Text>
-                )}
-                <Field
-                  label="총 칼로리 (kcal)"
-                  value={amount}
-                  onChangeText={setAmount}
-                  numeric
-                  maxLength={10}
-                  disabled={busy}
-                />
-                {MACRONUTRIENTS.map(({ key, label }) => (
-                  <Field
-                    key={key}
-                    label={`${label} (g)`}
-                    value={macros[key]}
-                    onChangeText={(value) =>
-                      setMacros((current) => ({
-                        ...current,
-                        [key]: value,
-                      }))
-                    }
-                    numeric
-                    maxLength={10}
-                    disabled={busy}
-                  />
-                ))}
-                <Text style={s.caption}>영양소는 알고 있는 값만 입력해 주세요.</Text>
-                <View style={s.favoriteFoodActions}>
-                  <Button
-                    label={favoriteActionLabel}
-                    secondary
-                    disabled={busy}
-                    onPress={() => void saveFavorite()}
-                  />
-                  <Text style={s.caption}>
-                    {existingFavorite
-                      ? '같은 이름의 음식에 현재 칼로리와 영양소를 저장합니다.'
-                      : '현재 음식과 칼로리·영양소를 저장해 다음 기록에 사용할 수 있어요.'}
-                  </Text>
-                  {!!favoriteMessage && (
-                    <Text accessibilityLiveRegion="polite" style={s.body}>
-                      {favoriteMessage}
-                    </Text>
-                  )}
-                </View>
-              </>
-            )}
-            {!!formError && (
-              <Text accessibilityRole="alert" style={s.error}>
-                {formError}
-              </Text>
-            )}
-            <View
-              style={[
-                s.row,
-                {
-                  justifyContent: 'flex-end',
-                  marginTop: 24,
-                },
-              ]}
-            >
-              <Button label="취소" disabled={busy} onPress={() => onClose()} />
-              <Button
-                label={busy ? '저장 중…' : '기록 저장'}
-                primary
-                disabled={busy}
-                onPress={() => void submit()}
-              />
-            </View>
+            {form}
           </ScrollView>
         </View>
       </KeyboardAvoidingView>

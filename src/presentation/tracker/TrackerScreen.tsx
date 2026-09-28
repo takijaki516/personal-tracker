@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  BackHandler,
+  Keyboard,
   ScrollView,
   StatusBar,
   Text,
@@ -40,9 +42,56 @@ export default function TrackerScreen() {
   const [date, setDate] = useState(localDate);
   const [editor, setEditor] = useState<Editor | null>(null);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
+  const recordsScroll = useRef<ScrollView | null>(null);
+  const scrollOffset = useRef(0);
+  const returnScrollOffset = useRef<number | null>(null);
+  const mealEditorOpen = editor?.kind === 'meal';
   const day = data.days[date] ?? emptyDay();
 
+  const closeEditor = useCallback(() => {
+    Keyboard.dismiss();
+    setEditor(null);
+  }, []);
+  const restoreRecordScroll = useCallback(() => {
+    if (returnScrollOffset.current === null) {
+      return;
+    }
+    recordsScroll.current?.scrollTo({
+      y: returnScrollOffset.current,
+      animated: false,
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (mealEditorOpen) {
+      return;
+    }
+    restoreRecordScroll();
+    const frame = requestAnimationFrame(() => {
+      restoreRecordScroll();
+      returnScrollOffset.current = null;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [mealEditorOpen, restoreRecordScroll]);
+
+  useEffect(() => {
+    if (!mealEditorOpen) {
+      return;
+    }
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (!busy) {
+        closeEditor();
+      }
+      return true;
+    });
+    return () => subscription.remove();
+  }, [mealEditorOpen, busy, closeEditor]);
+
   function openEditor(kind: RecordKind, id: string | null = null) {
+    if (kind === 'meal') {
+      // Hiding a web scroll view can emit a delayed zero-offset scroll event.
+      returnScrollOffset.current = scrollOffset.current;
+    }
     setEditor({
       kind,
       id,
@@ -81,7 +130,11 @@ export default function TrackerScreen() {
   return (
     <SafeAreaView style={s.root}>
       <StatusBar barStyle="dark-content" />
-      <View style={s.shell}>
+      <View
+        style={[s.shell, mealEditorOpen && s.hidden]}
+        accessibilityElementsHidden={mealEditorOpen}
+        importantForAccessibility={mealEditorOpen ? 'no-hide-descendants' : 'auto'}
+      >
         {wide && (
           <TrackerSidebar
             onSelectToday={() => {
@@ -90,9 +143,21 @@ export default function TrackerScreen() {
           />
         )}
         <ScrollView
+          ref={recordsScroll}
           style={{ flex: 1 }}
           contentContainerStyle={[s.content, !wide && { padding: 20 }]}
           keyboardShouldPersistTaps="handled"
+          onScroll={(event) => {
+            if (!mealEditorOpen && returnScrollOffset.current === null) {
+              scrollOffset.current = event.nativeEvent.contentOffset.y;
+            }
+          }}
+          scrollEventThrottle={16}
+          onLayout={() => {
+            if (!mealEditorOpen) {
+              restoreRecordScroll();
+            }
+          }}
         >
           <DateNavigation date={date} onDateChange={setDate} />
           {!!message && (
@@ -114,7 +179,6 @@ export default function TrackerScreen() {
           </View>
           <SyncPanel disabled={locked || !!editor || !!confirmation} onChange={refresh} />
         </ScrollView>
-        <Toast message={toast} onDismiss={setToast} />
       </View>
 
       {editor && (
@@ -129,9 +193,10 @@ export default function TrackerScreen() {
           }
           onSaveFavorite={saveFavoriteFood}
           onRemoveFavorite={removeFavoriteFood}
-          onClose={() => setEditor(null)}
+          onClose={closeEditor}
         />
       )}
+      <Toast message={toast} onDismiss={setToast} />
       {confirmation && (
         <ConfirmationDialog
           confirmation={confirmation}
