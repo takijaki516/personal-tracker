@@ -16,13 +16,14 @@ import DailyRecords from './DailyRecords';
 import DateNavigation from './DateNavigation';
 import RecordEditor, { type Editor, type RecordKind } from './RecordEditor';
 import { styles as s } from './styles';
+import Toast from './Toast';
 import TrackerSidebar from './TrackerSidebar';
 import { useTrackerRecords } from './useTrackerRecords';
 
 export default function TrackerScreen() {
   const { width } = useWindowDimensions();
   const wide = width >= 950;
-  const { data, loaded, blocked, busy, message, setMessage, updateDay, refresh } =
+  const { data, loaded, blocked, busy, message, setMessage, toast, setToast, updateDay, refresh } =
     useTrackerRecords();
   const [date, setDate] = useState(localDate);
   const [editor, setEditor] = useState<Editor | null>(null);
@@ -49,6 +50,7 @@ export default function TrackerScreen() {
               [kind]: day[kind].filter((item) => item.id !== id),
             },
             date,
+            kind === 'meals' ? '식단 삭제 성공' : '운동 삭제 성공',
           )
         ).ok,
     });
@@ -100,6 +102,7 @@ export default function TrackerScreen() {
           </View>
           <SyncPanel disabled={locked || !!editor || !!confirmation} onChange={refresh} />
         </ScrollView>
+        <Toast message={toast} onDismiss={setToast} />
       </View>
 
       {editor && (
@@ -107,7 +110,9 @@ export default function TrackerScreen() {
           editor={editor}
           day={data.days[editor.date] ?? emptyDay()}
           busy={busy}
-          onSave={updateDay}
+          onSave={(next, target) =>
+            updateDay(next, target, editor.kind === 'meal' ? '식단 저장 성공' : '운동 저장 성공')
+          }
           onClose={() => setEditor(null)}
         />
       )}

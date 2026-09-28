@@ -11,6 +11,8 @@ const storage = {
 
 export type SaveResult = { ok: boolean; error?: string };
 
+export type ToastMessage = { text: string };
+
 export const errorText = (error: unknown) =>
   error instanceof Error ? error.message : '작업을 완료하지 못했습니다.';
 
@@ -20,6 +22,7 @@ export function useTrackerRecords() {
   const [blocked, setBlocked] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [toast, setToast] = useState<ToastMessage | null>(null);
   const saving = useRef(false);
   const dataRevision = useRef(0);
 
@@ -49,7 +52,11 @@ export function useTrackerRecords() {
     };
   }, []);
 
-  async function persist(next: Store, restoring = false): Promise<SaveResult> {
+  async function persist(
+    next: Store,
+    restoring = false,
+    successMessage = '기록 저장 성공',
+  ): Promise<SaveResult> {
     if (saving.current || !loaded) {
       return { ok: false };
     }
@@ -58,6 +65,7 @@ export function useTrackerRecords() {
       return { ok: false };
     }
     saving.current = true;
+    setToast(null);
     dataRevision.current++;
     setBusy(true);
     try {
@@ -68,7 +76,8 @@ export function useTrackerRecords() {
       }
       setData(await loadRecords(storage));
       setBlocked(false);
-      setMessage(restoring ? '백업을 복원했어요.' : '기록을 저장했어요.');
+      setMessage('');
+      setToast({ text: restoring ? '백업 복원 성공' : successMessage });
       return { ok: true };
     } catch (error) {
       const text = `저장하지 못했습니다. ${errorText(error)}`;
@@ -83,14 +92,18 @@ export function useTrackerRecords() {
     }
   }
 
-  function updateDay(next: Day, target: string) {
-    return persist({
-      ...data,
-      days: {
-        ...data.days,
-        [target]: next,
+  function updateDay(next: Day, target: string, successMessage?: string) {
+    return persist(
+      {
+        ...data,
+        days: {
+          ...data.days,
+          [target]: next,
+        },
       },
-    });
+      false,
+      successMessage,
+    );
   }
 
   async function refresh() {
@@ -110,6 +123,8 @@ export function useTrackerRecords() {
     busy,
     message,
     setMessage,
+    toast,
+    setToast,
     updateDay,
     persist,
     refresh,
