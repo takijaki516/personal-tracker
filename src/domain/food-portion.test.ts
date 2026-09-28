@@ -7,6 +7,7 @@ import {
   changeMealUnit,
   createFoodPortionInput,
   createMealNutritionInput,
+  getMealNutritionPreview,
   parseFoodPortionInput,
   parseMealNutritionInput,
   parsePortionedFoodInput,
@@ -142,6 +143,105 @@ describe('meal nutrition editing with an internal reference', () => {
       fat: 3.6,
     });
     expect(parseMealNutritionInput(favorite.name, bigger).protein).toBeUndefined();
+  });
+});
+
+describe('meal nutrition previews', () => {
+  it('updates food previews and section totals after quantity and nutrition edits', () => {
+    const initial = createMealNutritionInput(favorite);
+    expect(getMealNutritionPreview(initial)).toEqual({
+      calories: 330,
+      carbohydrates: 0,
+      protein: 62,
+      fat: 7.2,
+    });
+    const smaller = changeMealQuantity(initial, '100');
+    const edited = changeMealNutrition(smaller, 'protein', '40');
+    expect(getMealNutritionPreview(edited)).toEqual({
+      calories: 165,
+      carbohydrates: 0,
+      protein: 40,
+      fat: 3.6,
+    });
+    const larger = changeMealQuantity(edited, '200');
+    const rice = createMealNutritionInput({
+      name: '현미밥',
+      calories: 300,
+      carbohydrates: 65.5,
+      protein: 6,
+      fat: 0,
+    });
+    const totals = getDailyNutrition(
+      [larger, rice].map((draft) => getMealNutritionPreview(draft) ?? {}),
+    );
+    expect(totals.map(({ consumed }) => consumed)).toEqual([630, 65.5, 86, 7.2]);
+    expect(totals.map(({ missing }) => missing)).toEqual([0, 0, 0, 0]);
+  });
+
+  it('distinguishes missing nutrients from zero in food previews and meal totals', () => {
+    const preview = getMealNutritionPreview(
+      createMealNutritionInput({
+        name: '기존 식단',
+        calories: 120,
+        carbohydrates: 0,
+      }),
+    );
+    expect(preview).toEqual({
+      calories: 120,
+      carbohydrates: 0,
+    });
+    const totals = getDailyNutrition([
+      getMealNutritionPreview(createMealNutritionInput(favorite)) ?? {},
+      preview ?? {},
+    ]);
+    expect(totals.map(({ consumed }) => consumed)).toEqual([450, 0, 62, 7.2]);
+    expect(totals.map(({ missing }) => missing)).toEqual([0, 0, 1, 1]);
+  });
+
+  it.each([
+    {
+      label: 'empty quantity',
+      draft: changeMealQuantity(createMealNutritionInput(favorite), ''),
+    },
+    {
+      label: 'zero quantity',
+      draft: changeMealQuantity(createMealNutritionInput(favorite), '0'),
+    },
+    {
+      label: 'pending unit',
+      draft: changeMealUnit(createMealNutritionInput(favorite), 'serving'),
+    },
+    {
+      label: 'missing calories',
+      draft: changeMealNutrition(createMealNutritionInput(favorite), 'calories', ''),
+    },
+    {
+      label: 'invalid nutrient',
+      draft: changeMealNutrition(createMealNutritionInput(favorite), 'protein', 'abc'),
+    },
+    {
+      label: 'totals outside the allowed range',
+      draft: changeMealQuantity(createMealNutritionInput(favorite), '20000'),
+    },
+  ])('does not preview stale or invalid values for $label', ({ draft }) => {
+    expect(getMealNutritionPreview(draft)).toBeNull();
+  });
+
+  it('excludes incomplete food quantities from section totals until corrected', () => {
+    const initial = createMealNutritionInput(favorite);
+    const incomplete = changeMealQuantity(initial, '');
+    const incompleteTotals = getDailyNutrition(
+      [initial, incomplete].map((draft) => getMealNutritionPreview(draft) ?? {}),
+    );
+    expect(incompleteTotals.map(({ consumed }) => consumed)).toEqual([330, 0, 62, 7.2]);
+    expect(incompleteTotals.map(({ missing }) => missing)).toEqual([1, 1, 1, 1]);
+    const corrected = changeMealQuantity(incomplete, '100');
+    expect(getMealNutritionPreview(corrected)).toEqual({
+      calories: 165,
+      carbohydrates: 0,
+      protein: 31,
+      fat: 3.6,
+    });
   });
 });
 

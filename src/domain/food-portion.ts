@@ -215,3 +215,16 @@ export function parseMealNutritionInput(name: string, input: MealNutritionInput)
   parseFoodNutritionInput(input.nutrition);
   return parsePortionedFoodInput(name, input.portion);
 }
+
+export function getMealNutritionPreview(input: MealNutritionInput): FoodNutrition | null {
+  if (input.pendingUnit) {
+    return null;
+  }
+  try {
+    parseFoodNutritionInput(input.nutrition);
+    return nutritionForPortion(parseFoodPortionInput(input.portion));
+  } catch {
+    // Incomplete drafts stay editable without displaying stale or invalid amounts.
+    return null;
+  }
+}

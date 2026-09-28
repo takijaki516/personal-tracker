@@ -1,11 +1,11 @@
 import { Text, View } from 'react-native';
-import { NUTRITION_METRICS, nutritionForPortion, type FoodNutrition } from '../../domain/data';
+import { NUTRITION_METRICS } from '../../domain/data';
 import {
   changeMealNutrition,
   changeMealQuantity,
   changeMealUnit,
   foodUnitLabel,
-  parseFoodPortionInput,
+  getMealNutritionPreview,
   type MealNutritionInput,
 } from '../../domain/food-portion';
 import Button from './Button';
@@ -19,12 +19,7 @@ type Props = {
 };
 
 export default function MealNutritionFields({ input, disabled, onChange }: Props) {
-  let totals: FoodNutrition | null = null;
-  try {
-    totals = nutritionForPortion(parseFoodPortionInput(input.portion));
-  } catch {
-    // Keep incomplete input editable; saving reports the specific validation error.
-  }
+  const totals = getMealNutritionPreview(input);
 
   return (
     <>

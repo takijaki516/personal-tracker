@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { MACRONUTRIENTS, type Meal } from '../../domain/data';
 import { formatFoodQuantity } from '../../domain/food-portion';
-import { getDailyNutrition } from '../../domain/nutrition-goals';
 import Button from './Button';
+import { formatNutritionSummary } from './nutrition-summary';
 import { styles as s } from './styles';
 
 type Props = {
@@ -14,26 +14,9 @@ type Props = {
   onRemove: (id: string) => void;
 };
 
-const TOTAL_LABELS = {
-  calories: '총',
-  carbohydrates: '탄',
-  protein: '단',
-  fat: '지',
-};
-
 export default function MealSection({ slot, meals, locked, onEdit, onRemove }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const summary = getDailyNutrition(meals)
-    .map(({ key, consumed, missing, unit }) => {
-      const label = TOTAL_LABELS[key];
-      if (missing > 0 && missing === meals.length) {
-        return `${label}: 미입력`;
-      }
-      const amount = consumed.toLocaleString('ko-KR', { maximumFractionDigits: 2 });
-      const missingText = missing > 0 ? ` (미입력 ${missing}개)` : '';
-      return `${label}: ${amount} ${unit}${missingText}`;
-    })
-    .join(', ');
+  const summary = formatNutritionSummary(meals);
 
   return (
     <View style={s.mealSection}>

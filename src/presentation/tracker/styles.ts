@@ -284,6 +284,11 @@ export const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: '#eef0e9',
   },
+  mealInputSectionHeading: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
+  },
   mealRecord: {
     paddingHorizontal: 14,
     paddingVertical: 10,

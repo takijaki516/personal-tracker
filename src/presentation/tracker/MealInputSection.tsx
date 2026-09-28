@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { foodUnitLabel } from '../../domain/food-portion';
+import { foodUnitLabel, getMealNutritionPreview } from '../../domain/food-portion';
 import type { MealFoodDraft } from './MealFoodEditor';
+import { formatFoodNutritionSummary, formatNutritionSummary } from './nutrition-summary';
 import { styles as s } from './styles';
 
 type Props = {
@@ -21,11 +22,14 @@ export default function MealInputSection({
   onToggle,
   children,
 }: Props) {
+  const previews = drafts.map((draft) => getMealNutritionPreview(draft.nutritionInput));
+  const summary = formatNutritionSummary(previews.map((preview) => preview ?? {}));
+
   return (
     <View style={s.mealSection}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${slot} 음식 입력 ${expanded ? '접기' : '펼치기'}`}
+        accessibilityLabel={`${slot} 음식 입력 ${expanded ? '접기' : '펼치기'} (${summary})`}
         accessibilityState={{
           expanded,
           disabled: busy,
@@ -38,9 +42,12 @@ export default function MealInputSection({
           busy && { opacity: 0.4 },
         ]}
       >
-        <Text style={[s.label, s.mealSectionTitle]}>
-          {slot} <Text style={s.caption}>(음식 {drafts.length}개)</Text>
-        </Text>
+        <View style={s.mealInputSectionHeading}>
+          <Text style={s.label}>
+            {slot} <Text style={s.caption}>(음식 {drafts.length}개)</Text>
+          </Text>
+          <Text style={s.caption}>{summary}</Text>
+        </View>
         <Text
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
@@ -55,7 +62,7 @@ export default function MealInputSection({
         </View>
       )}
       {!expanded &&
-        drafts.map((draft) => {
+        drafts.map((draft, index) => {
           const portion = draft.nutritionInput.portion;
           const quantity = portion.quantity.trim();
           return (
@@ -66,6 +73,7 @@ export default function MealInputSection({
                   {quantity ? `${quantity} ${foodUnitLabel(portion.unit)}` : '섭취량 미입력'}
                 </Text>
               </View>
+              <Text style={s.caption}>{formatFoodNutritionSummary(previews[index])}</Text>
             </View>
           );
         })}

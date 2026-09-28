@@ -1,4 +1,9 @@
-import { NUTRITION_METRICS, parseNutritionGoals, type Meal, type NutritionKey } from './data';
+import {
+  NUTRITION_METRICS,
+  parseNutritionGoals,
+  type FoodNutrition,
+  type NutritionKey,
+} from './data';
 
 export type NutritionGoalInput = Record<NutritionKey, string>;
 
@@ -15,7 +20,7 @@ export function parseNutritionGoalInput(input: NutritionGoalInput) {
 
 const roundAmount = (value: number) => Math.round(value * 100) / 100;
 
-export function getDailyNutrition(meals: Meal[]) {
+export function getDailyNutrition<T extends Partial<FoodNutrition>>(meals: readonly T[]) {
   return NUTRITION_METRICS.map((metric) => {
     let consumed = 0;
     let missing = 0;
