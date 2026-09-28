@@ -44,16 +44,17 @@ export default function DailyRecords({
             locked={locked}
             onEditGoals={onEditGoals}
           />
-          {MEAL_SLOTS.map((slot) => (
-            <MealSection
-              key={`${date}-${slot}`}
-              slot={slot}
-              meals={day.meals.filter((meal) => meal.slot === slot)}
-              locked={locked}
-              onEdit={(id) => onEdit('meal', id)}
-              onRemove={(id) => onRemove('meals', id)}
-            />
-          ))}
+          {tab === 'meals' &&
+            MEAL_SLOTS.map((slot) => (
+              <MealSection
+                key={`${date}-${slot}`}
+                slot={slot}
+                meals={day.meals.filter((meal) => meal.slot === slot)}
+                locked={locked}
+                onEdit={(id) => onEdit('meal', id)}
+                onRemove={(id) => onRemove('meals', id)}
+              />
+            ))}
         </View>
       )}
       {tab !== 'meals' && (
