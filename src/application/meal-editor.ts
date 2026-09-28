@@ -1,4 +1,4 @@
-import type { Day, FavoriteFood, Meal } from '../domain/data';
+import { MEAL_SLOTS, type Day, type FavoriteFood, type Meal } from '../domain/data';
 import {
   createMealNutritionInput,
   parseMealNutritionInput,
@@ -32,6 +32,15 @@ export function createMealFoodInput(id: string, food?: Omit<FavoriteFood, 'id'>)
     name: food?.name ?? '',
     nutritionInput: createMealNutritionInput(food),
   };
+}
+
+export function createMealSectionInputs(day: Day): MealSectionInput[] {
+  return MEAL_SLOTS.map((slot) => ({
+    slot,
+    foods: day.meals
+      .filter((meal) => meal.slot === slot)
+      .map((meal) => createMealFoodInput(meal.id, meal)),
+  }));
 }
 
 export function applyMealFoodInputs(
@@ -75,12 +84,21 @@ export function applyMealFoodInputs(
   };
 }
 
-export function applyMealSectionInputs(day: Day, sections: MealSectionInput[]): Day {
-  if (sections.every((section) => section.foods.length === 0)) {
+export function applyMealSectionInputs(
+  day: Day,
+  sections: MealSectionInput[],
+  editedIds: string[] = [],
+): Day {
+  const inputIds = new Set(sections.flatMap(({ foods }) => foods.map(({ id }) => id)));
+  if (inputIds.size === 0 && editedIds.length === 0) {
     throw new Error('음식을 한 개 이상 추가해 주세요.');
   }
+  const removedIds = new Set(editedIds.filter((id) => !inputIds.has(id)));
   const ids = new Set<string>();
-  let next = day;
+  let next = {
+    ...day,
+    meals: day.meals.filter((meal) => !removedIds.has(meal.id)),
+  };
   for (const { slot, foods } of sections) {
     if (foods.length === 0) {
       continue;

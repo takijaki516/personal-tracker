@@ -51,7 +51,7 @@ export default function MealInputSection({
       </Pressable>
       {!expanded && drafts.length === 0 && (
         <View style={s.mealRecord}>
-          <Text style={s.caption}>추가한 음식이 없습니다.</Text>
+          <Text style={s.caption}>음식이 없습니다.</Text>
         </View>
       )}
       {!expanded &&

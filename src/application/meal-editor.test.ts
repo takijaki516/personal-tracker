@@ -10,6 +10,7 @@ import {
   applyMealFoodInputs,
   applyMealSectionInputs,
   createMealFoodInput,
+  createMealSectionInputs,
   MealSectionError,
   type MealFoodInput,
   type MealSectionInput,
@@ -65,6 +66,25 @@ describe('foods in separate meal sections', () => {
       ],
     },
   ];
+
+  function recordedDay(): Day {
+    return {
+      ...applyMealSectionInputs(emptyDay(), sections),
+      workouts: [
+        {
+          id: 'squat',
+          name: '스쿼트',
+          bodyPart: 'legs',
+          sets: [
+            {
+              reps: 10,
+              weightKg: 20,
+            },
+          ],
+        },
+      ],
+    };
+  }
 
   it('saves all four sections with one write and retains existing meals and workouts', async () => {
     const before: Day = {
@@ -253,6 +273,186 @@ describe('foods in separate meal sections', () => {
     expect(loaded.days[date].meals).toEqual(expect.arrayContaining(after.days[date].meals));
     expect(loaded.days[date].meals).toHaveLength(6);
     expect(loaded.days[date].workouts).toEqual([]);
+  });
+
+  it('loads the recorded foods into their sections and saves their IDs and quantities without duplicates', () => {
+    const day = recordedDay();
+    const inputs = createMealSectionInputs(day);
+    expect(
+      inputs.map(({ slot, foods }) => ({
+        slot,
+        ids: foods.map(({ id }) => id),
+      })),
+    ).toEqual([
+      {
+        slot: '아침',
+        ids: ['rice', 'egg'],
+      },
+      {
+        slot: '점심',
+        ids: ['chicken'],
+      },
+      {
+        slot: '저녁',
+        ids: ['dinner-rice'],
+      },
+      {
+        slot: '간식',
+        ids: ['apple'],
+      },
+    ]);
+    expect(inputs[1].foods[0].nutritionInput.portion.quantity).toBe('200');
+    expect(inputs[1].foods[0].nutritionInput.nutrition.protein).toBe('62');
+    expect(
+      applyMealSectionInputs(
+        day,
+        inputs,
+        day.meals.map(({ id }) => id),
+      ),
+    ).toEqual(day);
+  });
+
+  it('updates and removes recorded foods and adds another while preserving workouts', () => {
+    const day = recordedDay();
+    const original = structuredClone(day);
+    const inputs = createMealSectionInputs(day).map(({ slot, foods }) => ({
+      slot,
+      foods: foods
+        .filter(({ id }) => id !== 'chicken')
+        .map((food) =>
+          food.id === 'rice'
+            ? {
+                ...food,
+                nutritionInput: changeMealQuantity(food.nutritionInput, '0.5'),
+              }
+            : food,
+        ),
+    }));
+    inputs[3].foods.push(
+      createMealFoodInput('yogurt', {
+        name: '요거트',
+        calories: 80,
+        protein: 5,
+      }),
+    );
+    const ids = day.meals.map(({ id }) => id);
+    const next = applyMealSectionInputs(day, inputs, ids);
+    expect(next.meals.map(({ id }) => id)).toEqual([
+      'rice',
+      'egg',
+      'dinner-rice',
+      'apple',
+      'yogurt',
+    ]);
+    expect(next.meals[0]).toMatchObject({
+      id: 'rice',
+      slot: '아침',
+      calories: 150,
+      carbohydrates: 30,
+      portion: {
+        quantity: 0.5,
+        unit: 'serving',
+      },
+    });
+    expect(next.meals[4]).toMatchObject({
+      id: 'yogurt',
+      slot: '간식',
+      calories: 80,
+    });
+    expect(next.workouts).toEqual(day.workouts);
+    expect(applyMealSectionInputs(next, inputs, ids)).toEqual(next);
+    expect(day).toEqual(original);
+    expect(parseStore(JSON.stringify(storeWithDay(next))).days[date]).toEqual(next);
+  });
+
+  it('allows removing all loaded foods and retains foods added after the editor opened', () => {
+    const day = recordedDay();
+    const ids = day.meals.map(({ id }) => id);
+    const emptyInputs = createMealSectionInputs(day).map(({ slot }) => ({
+      slot,
+      foods: [],
+    }));
+    const cleared = applyMealSectionInputs(day, emptyInputs, ids);
+    expect(cleared.meals).toEqual([]);
+    expect(cleared.workouts).toEqual(day.workouts);
+    const additional = {
+      id: 'new-milk',
+      name: '우유',
+      slot: '점심',
+      calories: 120,
+    };
+    const latest = {
+      ...day,
+      meals: [...day.meals, additional],
+    };
+    expect(applyMealSectionInputs(latest, emptyInputs, ids).meals).toEqual([additional]);
+  });
+
+  it('rejects an invalid edited section before applying any removals', () => {
+    const day = recordedDay();
+    const original = structuredClone(day);
+    const inputs = createMealSectionInputs(day).map(({ slot, foods }) => ({
+      slot,
+      foods: foods
+        .filter(({ id }) => id !== 'chicken')
+        .map((food) =>
+          food.id === 'apple'
+            ? {
+                ...food,
+                name: '',
+              }
+            : food,
+        ),
+    }));
+    const ids = day.meals.map(({ id }) => id);
+    expect(() => applyMealSectionInputs(day, inputs, ids)).toThrow('간식: 음식 1: 음식 이름');
+    expect(day).toEqual(original);
+  });
+
+  it('retries a failed removal save and keeps deletion markers when the old document is merged', async () => {
+    let document: SyncDocument | null = null;
+    const commit = vi.fn<LocalAdapter['commit']>(async (next) => {
+      document = structuredClone(next);
+    });
+    const engine = createEngine({
+      load: async () => document,
+      commit,
+      legacy: async () => null,
+      backup: async () => {},
+      uuid: () => 'device',
+    });
+    const seed: Store = {
+      ...emptyStore(),
+      nutritionGoals: { calories: 2000 },
+      days: {
+        [date]: recordedDay(),
+        '2026-09-27': applyMealFoodInputs(emptyDay(), '점심', [rice], null),
+      },
+    };
+    await engine.write(JSON.stringify(seed));
+    const before = await loadRecords(engine);
+    const previousDocument = await engine.document();
+    const day = before.days[date];
+    const after = {
+      ...before,
+      days: {
+        ...before.days,
+        [date]: applyMealSectionInputs(
+          day,
+          [],
+          day.meals.map(({ id }) => id),
+        ),
+      },
+    };
+    commit.mockRejectedValueOnce(new Error('disk full'));
+    await expect(saveRecords(engine, after, before)).rejects.toThrow('disk full');
+    expect(await loadRecords(engine)).toEqual(before);
+    await saveRecords(engine, after, before);
+    expect(await loadRecords(engine)).toEqual(after);
+    const saved = await engine.document();
+    await saveRecords(engine, after, after);
+    expect(await engine.document()).toEqual(saved);
+    expect(snapshot(mergeDocuments(saved, previousDocument))).toEqual(after);
   });
 });
 const chicken = createMealFoodInput(

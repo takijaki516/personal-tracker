@@ -14,6 +14,7 @@ import {
   applyMealFoodInputs,
   applyMealSectionInputs,
   createMealFoodInput,
+  createMealSectionInputs,
   MealSectionError,
 } from '../../application/meal-editor';
 import {
@@ -75,8 +76,16 @@ export default function RecordEditor({
     editor.kind === 'workout' ? day.workouts.find((entry) => entry.id === editor.id) : undefined;
   const [name, setName] = useState(workout?.name ?? '');
   const [mealFoods, setMealFoods] = useState<SlottedMealFoodDraft[]>(() => {
-    if (editor.kind !== 'meal' || editor.id === null) {
+    if (editor.kind !== 'meal') {
       return [];
+    }
+    if (editor.id === null) {
+      return createMealSectionInputs(day).flatMap(({ slot, foods }) =>
+        foods.map((food) => ({
+          ...food,
+          slot,
+        })),
+      );
     }
     return [
       {
@@ -85,6 +94,7 @@ export default function RecordEditor({
       },
     ];
   });
+  const [initialMealIds] = useState(() => mealFoods.map(({ id }) => id));
   const [slot, setSlot] = useState(meal?.slot ?? '아침');
   const [expandedMealSlots, setExpandedMealSlots] = useState<string[]>([]);
   const [bodyPart, setBodyPart] = useState<BodyPart | null>(workout?.bodyPart ?? null);
@@ -241,6 +251,7 @@ export default function RecordEditor({
               slot: mealSlot,
               foods: mealFoods.filter((food) => food.slot === mealSlot),
             })),
+            initialMealIds,
           ).meals;
         } else {
           next.meals = applyMealFoodInputs(current, slot, mealFoods, editor.id).meals;
@@ -362,7 +373,7 @@ export default function RecordEditor({
           {editor.id === null ? (
             <>
               <Text style={s.caption}>
-                식사별 구역을 펼쳐 음식을 추가하고 섭취량을 조절해 주세요.
+                식사별 구역을 펼쳐 기록한 음식을 수정하거나 새 음식을 추가해 주세요.
               </Text>
               {MEAL_SLOTS.map((mealSlot) => {
                 const drafts = mealFoods.filter((food) => food.slot === mealSlot);
@@ -486,7 +497,10 @@ export default function RecordEditor({
         <Button
           label={busy ? '저장 중…' : '기록 저장'}
           primary
-          disabled={busy || (editor.kind === 'meal' && mealFoods.length === 0)}
+          disabled={
+            busy ||
+            (editor.kind === 'meal' && mealFoods.length === 0 && initialMealIds.length === 0)
+          }
           onPress={() => void submit()}
         />
       </View>
