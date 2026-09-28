@@ -38,15 +38,17 @@ export default function MealInputSection({
         onPress={onToggle}
         style={({ pressed }) => [
           s.mealSectionHeader,
+          s.mealInputSectionHeader,
           pressed && { opacity: 0.65 },
           busy && { opacity: 0.4 },
         ]}
       >
         <View style={s.mealInputSectionHeading}>
           <Text style={s.label}>
-            {slot} <Text style={s.caption}>(음식 {drafts.length}개)</Text>
+            {slot}{' '}
+            <Text style={[s.caption, s.mealInputSectionHeaderText]}>(음식 {drafts.length}개)</Text>
           </Text>
-          <Text style={s.caption}>{summary}</Text>
+          <Text style={[s.caption, s.mealInputSectionHeaderText]}>{summary}</Text>
         </View>
         <Text
           accessibilityElementsHidden

@@ -289,6 +289,12 @@ export const styles = StyleSheet.create({
     minWidth: 0,
     gap: 4,
   },
+  mealInputSectionHeader: {
+    backgroundColor: '#e7eedc',
+  },
+  mealInputSectionHeaderText: {
+    color: '#52654b',
+  },
   mealRecord: {
     paddingHorizontal: 14,
     paddingVertical: 10,
