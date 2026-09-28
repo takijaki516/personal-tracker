@@ -10,6 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { applyMealFoodInputs, createMealFoodInput } from '../../application/meal-editor';
 import {
   MAX_REPS,
   MAX_WEIGHT_KG,
@@ -17,21 +18,15 @@ import {
   type BodyPart,
   type Day,
   type FavoriteFood,
-  type Meal,
   type Store,
   type WorkoutSet,
 } from '../../domain/data';
-import { findFavoriteFood } from '../../domain/favorite-foods';
-import { createMealNutritionInput, parseMealNutritionInput } from '../../domain/food-portion';
-import { foodSearchSelection, type FoodSearchResult } from '../../domain/food-search';
 import { WORKOUT_OPTIONS } from '../../domain/workout-options';
 import Button from './Button';
 import { formatDateWithWeekday } from './calendar';
-import FavoriteFoods from './FavoriteFoods';
 import Field from './Field';
-import FoodNameInput from './FoodNameInput';
 import FoodSelectionScreen from './FoodSelectionScreen';
-import MealNutritionFields from './MealNutritionFields';
+import MealFoodEditor, { type MealFoodDraft } from './MealFoodEditor';
 import { styles as s } from './styles';
 import { errorText, type SaveResult } from './useTrackerRecords';
 import WorkoutSelect from './WorkoutSelect';
@@ -69,9 +64,10 @@ export default function RecordEditor({
     editor.kind === 'meal' ? day.meals.find((entry) => entry.id === editor.id) : undefined;
   const workout =
     editor.kind === 'workout' ? day.workouts.find((entry) => entry.id === editor.id) : undefined;
-  const item = meal ?? workout;
-  const [name, setName] = useState(item?.name ?? '');
-  const [nutritionInput, setNutritionInput] = useState(() => createMealNutritionInput(meal));
+  const [name, setName] = useState(workout?.name ?? '');
+  const [mealFoods, setMealFoods] = useState<MealFoodDraft[]>(() =>
+    editor.kind === 'meal' ? [createMealFoodInput(meal?.id ?? Crypto.randomUUID(), meal)] : [],
+  );
   const [slot, setSlot] = useState(meal?.slot ?? '아침');
   const [bodyPart, setBodyPart] = useState<BodyPart | null>(workout?.bodyPart ?? null);
   const [sets, setSets] = useState<SetInput[]>(
@@ -86,18 +82,16 @@ export default function RecordEditor({
     ],
   );
   const [formError, setFormError] = useState('');
-  const [favoriteMessage, setFavoriteMessage] = useState('');
-  const [selectedSearchFood, setSelectedSearchFood] = useState<FoodSearchResult | null>(null);
-  const [foodSelectionOpen, setFoodSelectionOpen] = useState(false);
+  const [foodSelectionId, setFoodSelectionId] = useState<string | null>(null);
+  const selectingFood = mealFoods.find((food) => food.id === foodSelectionId);
+  const foodSelectionOpen = selectingFood !== undefined;
   const editorScroll = useRef<ScrollView | null>(null);
   const scrollOffset = useRef(0);
   const returnScrollOffset = useRef<number | null>(null);
-  const existingFavorite = findFavoriteFood(favoriteFoods, name);
-  const favoriteActionLabel = existingFavorite ? '☆ 즐겨찾기 업데이트' : '☆ 즐겨찾기 등록';
 
   const closeFoodSelection = useCallback(() => {
     Keyboard.dismiss();
-    setFoodSelectionOpen(false);
+    setFoodSelectionId(null);
   }, []);
   const restoreEditorScroll = useCallback(() => {
     if (returnScrollOffset.current === null) {
@@ -137,59 +131,22 @@ export default function RecordEditor({
     return () => subscription.remove();
   }, [editor.kind, busy, foodSelectionOpen, closeFoodSelection, onClose]);
 
-  function openFoodSelection() {
+  function openFoodSelection(id: string) {
     if (!busy) {
       returnScrollOffset.current = scrollOffset.current;
-      setFoodSelectionOpen(true);
+      setFoodSelectionId(id);
     }
   }
 
-  function selectFood(food: Omit<FavoriteFood, 'id'>) {
-    setName(food.name);
-    setNutritionInput(createMealNutritionInput(food));
+  function changeFood(draft: MealFoodDraft) {
+    setMealFoods((current) => current.map((food) => (food.id === draft.id ? draft : food)));
     setFormError('');
-    setFavoriteMessage('');
-    setSelectedSearchFood(null);
   }
 
-  function readFood() {
+  function addFood() {
+    const draft = createMealFoodInput(Crypto.randomUUID());
+    setMealFoods((current) => [...current, draft]);
     setFormError('');
-    setFavoriteMessage('');
-    try {
-      return parseMealNutritionInput(name, nutritionInput);
-    } catch (error) {
-      setFormError(errorText(error));
-      return null;
-    }
-  }
-
-  async function saveFavorite() {
-    const food = readFood();
-    if (!food) {
-      return;
-    }
-    const result = await onSaveFavorite({
-      ...food,
-      id: existingFavorite?.id ?? Crypto.randomUUID(),
-    });
-    if (result.ok) {
-      setFavoriteMessage(
-        existingFavorite ? '즐겨찾는 음식을 업데이트했습니다.' : '즐겨찾기에 등록했습니다.',
-      );
-    } else if (result.error) {
-      setFormError(result.error);
-    }
-  }
-
-  async function removeFavorite(id: string) {
-    setFormError('');
-    setFavoriteMessage('');
-    const result = await onRemoveFavorite(id);
-    if (result.ok) {
-      setFavoriteMessage('즐겨찾기에서 해제했습니다.');
-    } else if (result.error) {
-      setFormError(result.error);
-    }
   }
 
   function updateSet(index: number, field: keyof SetInput, value: string) {
@@ -208,18 +165,13 @@ export default function RecordEditor({
     const current = day;
     const next = { ...current };
     if (editor.kind === 'meal') {
-      const food = readFood();
-      if (!food) {
+      setFormError('');
+      try {
+        next.meals = applyMealFoodInputs(current, slot, mealFoods, editor.id).meals;
+      } catch (error) {
+        setFormError(errorText(error));
         return;
       }
-      const item: Meal = {
-        ...food,
-        id: editor.id ?? Crypto.randomUUID(),
-        slot,
-      };
-      next.meals = editor.id
-        ? current.meals.map((m) => (m.id === editor.id ? item : m))
-        : [...current.meals, item];
     }
     if (editor.kind === 'workout') {
       if (bodyPart === null) {
@@ -270,30 +222,31 @@ export default function RecordEditor({
     }
   }
 
-  const foodSelection = editor.kind === 'meal' && foodSelectionOpen && (
+  const foodSelection = editor.kind === 'meal' && selectingFood && (
     <FoodSelectionScreen
-      name={name}
+      name={selectingFood.name}
       date={editor.date}
       days={days}
       favoriteFoods={favoriteFoods}
       disabled={busy}
       onClose={closeFoodSelection}
       onNameSelect={(value) => {
-        setName(value);
-        if (value !== name) {
-          setSelectedSearchFood(null);
-        }
+        changeFood({
+          ...selectingFood,
+          name: value,
+          fromSearch: value === selectingFood.name && selectingFood.fromSearch,
+        });
+        closeFoodSelection();
+      }}
+      onFoodsSelect={(foods) => {
+        const drafts = foods.map(({ food, fromSearch }, index) => ({
+          ...createMealFoodInput(index === 0 ? selectingFood.id : Crypto.randomUUID(), food),
+          fromSearch,
+        }));
+        setMealFoods((current) =>
+          current.flatMap((draft) => (draft.id === selectingFood.id ? drafts : [draft])),
+        );
         setFormError('');
-        setFavoriteMessage('');
-        closeFoodSelection();
-      }}
-      onSelect={(food) => {
-        selectFood(food);
-        closeFoodSelection();
-      }}
-      onSearchSelect={(food) => {
-        selectFood(foodSearchSelection(food));
-        setSelectedSearchFood(food);
         closeFoodSelection();
       }}
     />
@@ -324,15 +277,27 @@ export default function RecordEditor({
       )}
       {editor.kind === 'meal' && (
         <>
-          <FavoriteFoods
-            foods={favoriteFoods}
-            disabled={busy}
-            registerLabel={favoriteActionLabel}
-            onRegister={() => void saveFavorite()}
-            onSelect={selectFood}
-            onRemove={(id) => void removeFavorite(id)}
-          />
-          <FoodNameInput value={name} disabled={busy} onOpen={openFoodSelection} />
+          <Text style={[s.label, { marginTop: 20 }]}>음식 ({mealFoods.length}개)</Text>
+          <Text style={s.caption}>음식을 여러 개 추가하고 각각의 섭취량을 조절할 수 있어요.</Text>
+          {mealFoods.map((draft, index) => (
+            <MealFoodEditor
+              key={draft.id}
+              draft={draft}
+              index={index}
+              removable={mealFoods.length > 1}
+              favoriteFoods={favoriteFoods}
+              busy={busy}
+              onChange={changeFood}
+              onOpenSelection={() => openFoodSelection(draft.id)}
+              onRemove={() => {
+                setMealFoods((current) => current.filter((food) => food.id !== draft.id));
+                setFormError('');
+              }}
+              onSaveFavorite={onSaveFavorite}
+              onRemoveFavorite={onRemoveFavorite}
+            />
+          ))}
+          <Button label="＋ 음식 추가" disabled={busy} onPress={addFood} />
         </>
       )}
       {editor.kind === 'workout' && (
@@ -404,42 +369,6 @@ export default function RecordEditor({
               ])
             }
           />
-        </>
-      )}
-      {editor.kind === 'meal' && (
-        <>
-          {selectedSearchFood && (
-            <Text style={[s.caption, { marginTop: 12 }]}>
-              FatSecret에서 가져온 영양정보입니다. 섭취량을 조절해 주세요.
-            </Text>
-          )}
-          <MealNutritionFields
-            input={nutritionInput}
-            disabled={busy}
-            onChange={(input) => {
-              setNutritionInput(input);
-              setFormError('');
-              setFavoriteMessage('');
-            }}
-          />
-          <View style={s.favoriteFoodActions}>
-            <Button
-              label={favoriteActionLabel}
-              secondary
-              disabled={busy}
-              onPress={() => void saveFavorite()}
-            />
-            <Text style={s.caption}>
-              {existingFavorite
-                ? '같은 이름의 음식에 현재 섭취량과 영양정보를 저장합니다.'
-                : '현재 음식과 섭취량·영양정보를 저장해 다음 기록에 사용할 수 있어요.'}
-            </Text>
-            {!!favoriteMessage && (
-              <Text accessibilityLiveRegion="polite" style={s.body}>
-                {favoriteMessage}
-              </Text>
-            )}
-          </View>
         </>
       )}
       {!!formError && (

@@ -75,6 +75,19 @@ export const styles = StyleSheet.create({
     paddingTop: 16,
     gap: 16,
   },
+  selectedFoods: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    padding: 12,
+  },
+  mealFoodEditor: {
+    marginVertical: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#dce3d5',
+    borderRadius: 8,
+  },
   eyebrow: {
     fontSize: 10,
     letterSpacing: 2.5,

@@ -10,10 +10,18 @@ import { styles as s } from './styles';
 type Props = {
   query: string;
   composing: boolean;
+  disabled: boolean;
+  selectedUrls: string[];
   onSelect: (food: FoodSearchResult) => void;
 };
 
-export default function FatSecretFoods({ query, composing, onSelect }: Props) {
+export default function FatSecretFoods({
+  query,
+  composing,
+  disabled,
+  selectedUrls,
+  onSelect,
+}: Props) {
   const [state, setState] = useState<FoodAutocompleteState>({
     query: '',
     status: 'idle',
@@ -76,6 +84,7 @@ export default function FatSecretFoods({ query, composing, onSelect }: Props) {
             <Button
               label="다시 시도"
               secondary
+              disabled={disabled}
               onPress={() => autocomplete.update(query, composing)}
             />
           </>
@@ -89,27 +98,40 @@ export default function FatSecretFoods({ query, composing, onSelect }: Props) {
       {visibleState.status === 'success' && visibleState.foods.length > 0 && (
         <>
           <View>
-            {visibleState.foods.map((food, index) => (
-              <Pressable
-                key={`${food.sourceUrl}:${index}`}
-                accessibilityRole="button"
-                accessibilityLabel={`FatSecret: ${food.brand ? `${food.brand} ` : ''}${food.name} 선택, ${food.servingText}, ${food.calories}kcal`}
-                onPress={() => onSelect(food)}
-                style={({ pressed }) => [s.foodSuggestionOption, pressed && s.selected]}
-              >
-                <Text style={s.body}>{food.name}</Text>
-                {!!food.brand && <Text style={s.caption}>{food.brand}</Text>}
-                <Text style={s.caption}>
-                  {food.servingText} · {food.calories} kcal
-                </Text>
-                <Text style={s.caption}>
-                  {MACRONUTRIENTS.map(
-                    ({ key, label }) =>
-                      `${label} ${food[key] === undefined ? '미제공' : `${food[key]}g`}`,
-                  ).join(' · ')}
-                </Text>
-              </Pressable>
-            ))}
+            {visibleState.foods.map((food, index) => {
+              const checked = selectedUrls.includes(food.sourceUrl);
+              return (
+                <Pressable
+                  key={`${food.sourceUrl}:${index}`}
+                  accessibilityRole="checkbox"
+                  accessibilityLabel={`FatSecret: ${food.brand ? `${food.brand} ` : ''}${food.name} 선택, ${food.servingText}, ${food.calories}kcal`}
+                  accessibilityState={{
+                    checked,
+                    disabled,
+                  }}
+                  disabled={disabled}
+                  onPress={() => onSelect(food)}
+                  style={({ pressed }) => [
+                    s.foodSuggestionOption,
+                    (checked || pressed) && s.selected,
+                  ]}
+                >
+                  <Text style={s.body}>
+                    {checked ? '☑' : '☐'} {food.name}
+                  </Text>
+                  {!!food.brand && <Text style={s.caption}>{food.brand}</Text>}
+                  <Text style={s.caption}>
+                    {food.servingText} · {food.calories} kcal
+                  </Text>
+                  <Text style={s.caption}>
+                    {MACRONUTRIENTS.map(
+                      ({ key, label }) =>
+                        `${label} ${food[key] === undefined ? '미제공' : `${food[key]}g`}`,
+                    ).join(' · ')}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
           <Text style={[s.caption, s.foodSuggestionsEmpty]}>
             표시된 제공량 기준이에요. 선택한 뒤 섭취량을 입력하면 영양값이 자동 계산됩니다.
