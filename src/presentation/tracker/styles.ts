@@ -278,6 +278,12 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     color: '#607354',
   },
+  mealInputSectionContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderColor: '#eef0e9',
+  },
   mealRecord: {
     paddingHorizontal: 14,
     paddingVertical: 10,
