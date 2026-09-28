@@ -22,6 +22,7 @@ export type Meal = FoodNutrition & {
 
 export type FavoriteFood = Omit<Meal, 'slot'>;
 
+export const MEAL_SLOTS = ['아침', '점심', '저녁', '간식'] as const;
 export const MAX_MEAL_CALORIES = 20000;
 export const MAX_MACRONUTRIENT_GRAMS = 5000;
 export const MAX_FOOD_QUANTITY = 100000;
@@ -272,7 +273,7 @@ export function parseStore(raw: string): Store {
         !validFood(meal) ||
         ids.has(meal.id) ||
         !('slot' in meal) ||
-        !['아침', '점심', '저녁', '간식'].includes(String(meal.slot))
+        !MEAL_SLOTS.some((slot) => slot === String(meal.slot))
       ) {
         throw new Error('식단 기록을 확인해 주세요.');
       }

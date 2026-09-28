@@ -15,6 +15,7 @@ import {
   MAX_REPS,
   MAX_WEIGHT_KG,
   MAX_WORKOUT_SETS,
+  MEAL_SLOTS,
   type BodyPart,
   type Day,
   type FavoriteFood,
@@ -264,7 +265,7 @@ export default function RecordEditor({
             },
           ]}
         >
-          {['아침', '점심', '저녁', '간식'].map((t) => (
+          {MEAL_SLOTS.map((t) => (
             <Button
               key={t}
               label={t}

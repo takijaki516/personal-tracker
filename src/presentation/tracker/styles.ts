@@ -252,14 +252,41 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 9,
   },
-  record: {
+  mealSection: {
+    marginTop: 14,
+    borderWidth: 1,
+    borderColor: '#e2e7dd',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  mealSectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
-    marginTop: 12,
-    paddingTop: 12,
+    justifyContent: 'space-between',
+    minHeight: 48,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: '#f6f8f2',
+  },
+  mealSectionArrow: {
+    fontSize: 18,
+    color: '#607354',
+  },
+  mealRecord: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 8,
     borderTopWidth: 1,
     borderColor: '#eef0e9',
+  },
+  mealName: {
+    flex: 1,
+    minWidth: 0,
+  },
+  mealRecordActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
   },
   workoutCard: {
     flexDirection: 'row',
@@ -278,14 +305,6 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#526174',
     marginBottom: 2,
-  },
-  tag: {
-    fontSize: 11,
-    padding: 7,
-    color: '#978461',
-    backgroundColor: '#f4f0e7',
-    borderRadius: 6,
-    overflow: 'hidden',
   },
   overlay: {
     flex: 1,
