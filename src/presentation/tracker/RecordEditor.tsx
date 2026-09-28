@@ -2,23 +2,23 @@ import * as Crypto from 'expo-crypto';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, Text, View } from 'react-native';
 import {
-  isMealAmount,
   MACRONUTRIENTS,
-  MAX_MACRONUTRIENT_GRAMS,
-  MAX_MEAL_CALORIES,
   MAX_REPS,
   MAX_WEIGHT_KG,
   MAX_WORKOUT_SETS,
   type BodyPart,
   type Day,
+  type FavoriteFood,
   type Meal,
   type WorkoutSet,
 } from '../../domain/data';
+import { findFavoriteFood, parseFoodInput } from '../../domain/favorite-foods';
 import { WORKOUT_OPTIONS } from '../../domain/workout-options';
 import Button from './Button';
+import FavoriteFoods from './FavoriteFoods';
 import Field from './Field';
 import { styles as s } from './styles';
-import type { SaveResult } from './useTrackerRecords';
+import { errorText, type SaveResult } from './useTrackerRecords';
 import WorkoutSelect from './WorkoutSelect';
 
 export type RecordKind = 'meal' | 'workout';
@@ -30,12 +30,24 @@ type SetInput = { reps: string; weightKg: string };
 type Props = {
   editor: Editor;
   day: Day;
+  favoriteFoods: FavoriteFood[];
   busy: boolean;
   onSave: (day: Day, date: string) => Promise<SaveResult>;
+  onSaveFavorite: (food: FavoriteFood) => Promise<SaveResult>;
+  onRemoveFavorite: (id: string) => Promise<SaveResult>;
   onClose: () => void;
 };
 
-export default function RecordEditor({ editor, day, busy, onSave, onClose }: Props) {
+export default function RecordEditor({
+  editor,
+  day,
+  favoriteFoods,
+  busy,
+  onSave,
+  onSaveFavorite,
+  onRemoveFavorite,
+  onClose,
+}: Props) {
   const meal =
     editor.kind === 'meal' ? day.meals.find((entry) => entry.id === editor.id) : undefined;
   const workout =
@@ -62,6 +74,53 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
     ],
   );
   const [formError, setFormError] = useState('');
+  const [favoriteMessage, setFavoriteMessage] = useState('');
+  const existingFavorite = findFavoriteFood(favoriteFoods, name);
+
+  function readFood() {
+    setFormError('');
+    setFavoriteMessage('');
+    try {
+      return parseFoodInput({
+        name,
+        calories: amount,
+        ...macros,
+      });
+    } catch (error) {
+      setFormError(errorText(error));
+      return null;
+    }
+  }
+
+  async function saveFavorite() {
+    const food = readFood();
+    if (!food) {
+      return;
+    }
+    const result = await onSaveFavorite({
+      ...food,
+      id: existingFavorite?.id ?? Crypto.randomUUID(),
+    });
+    if (result.ok) {
+      setFavoriteMessage(
+        existingFavorite ? '즐겨찾는 음식을 업데이트했습니다.' : '즐겨찾기에 등록했습니다.',
+      );
+    } else if (result.error) {
+      setFormError(result.error);
+    }
+  }
+
+  async function removeFavorite(id: string) {
+    setFormError('');
+    setFavoriteMessage('');
+    const result = await onRemoveFavorite(id);
+    if (result.ok) {
+      setFavoriteMessage('즐겨찾기에서 해제했습니다.');
+    } else if (result.error) {
+      setFormError(result.error);
+    }
+  }
+
   function updateSet(index: number, field: keyof SetInput, value: string) {
     setSets((current) =>
       current.map((set, position) =>
@@ -78,37 +137,15 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
     const current = day;
     const next = { ...current };
     if (editor.kind === 'meal') {
-      if (!name.trim()) {
-        setFormError('이름을 입력해 주세요.');
-        return;
-      }
-      const calories = Number(amount.trim());
-      if (!amount.trim() || !isMealAmount(calories, MAX_MEAL_CALORIES)) {
-        setFormError(
-          `총 칼로리를 0~${MAX_MEAL_CALORIES.toLocaleString()}kcal 범위로 입력해 주세요.`,
-        );
+      const food = readFood();
+      if (!food) {
         return;
       }
       const item: Meal = {
+        ...food,
         id: editor.id ?? Crypto.randomUUID(),
-        name: name.trim(),
-        calories,
         slot,
       };
-      for (const { key, label } of MACRONUTRIENTS) {
-        const input = macros[key].trim();
-        if (!input) {
-          continue;
-        }
-        const grams = Number(input);
-        if (!isMealAmount(grams, MAX_MACRONUTRIENT_GRAMS)) {
-          setFormError(
-            `${label}을 0~${MAX_MACRONUTRIENT_GRAMS.toLocaleString()}g 범위로 입력해 주세요.`,
-          );
-          return;
-        }
-        item[key] = grams;
-      }
       next.meals = editor.id
         ? current.meals.map((m) => (m.id === editor.id ? item : m))
         : [...current.meals, item];
@@ -183,12 +220,36 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
                 ]}
               >
                 {['아침', '점심', '저녁', '간식'].map((t) => (
-                  <Button key={t} label={t} selected={slot === t} onPress={() => setSlot(t)} />
+                  <Button
+                    key={t}
+                    label={t}
+                    selected={slot === t}
+                    disabled={busy}
+                    onPress={() => setSlot(t)}
+                  />
                 ))}
               </View>
             )}
             {editor.kind === 'meal' && (
-              <Field label="음식 이름" value={name} onChangeText={setName} />
+              <>
+                <FavoriteFoods
+                  foods={favoriteFoods}
+                  disabled={busy}
+                  onSelect={(food) => {
+                    setName(food.name);
+                    setAmount(String(food.calories));
+                    setMacros({
+                      carbohydrates: food.carbohydrates?.toString() ?? '',
+                      protein: food.protein?.toString() ?? '',
+                      fat: food.fat?.toString() ?? '',
+                    });
+                    setFormError('');
+                    setFavoriteMessage('');
+                  }}
+                  onRemove={(id) => void removeFavorite(id)}
+                />
+                <Field label="음식 이름" value={name} onChangeText={setName} disabled={busy} />
+              </>
             )}
             {editor.kind === 'workout' && (
               <>
@@ -271,6 +332,7 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
                   onChangeText={setAmount}
                   numeric
                   maxLength={10}
+                  disabled={busy}
                 />
                 {MACRONUTRIENTS.map(({ key, label }) => (
                   <Field
@@ -285,9 +347,28 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
                     }
                     numeric
                     maxLength={10}
+                    disabled={busy}
                   />
                 ))}
                 <Text style={s.caption}>영양소는 알고 있는 값만 입력해 주세요.</Text>
+                <View style={s.favoriteFoodActions}>
+                  <Button
+                    label={existingFavorite ? '☆ 즐겨찾기 업데이트' : '☆ 즐겨찾기 등록'}
+                    secondary
+                    disabled={busy}
+                    onPress={() => void saveFavorite()}
+                  />
+                  <Text style={s.caption}>
+                    {existingFavorite
+                      ? '같은 이름의 음식에 현재 칼로리와 영양소를 저장합니다.'
+                      : '현재 음식과 칼로리·영양소를 저장해 다음 기록에 사용할 수 있어요.'}
+                  </Text>
+                  {!!favoriteMessage && (
+                    <Text accessibilityLiveRegion="polite" style={s.body}>
+                      {favoriteMessage}
+                    </Text>
+                  )}
+                </View>
               </>
             )}
             {!!formError && (

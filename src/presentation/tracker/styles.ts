@@ -237,6 +237,44 @@ export const styles = StyleSheet.create({
     marginTop: 20,
     gap: 8,
   },
+  favoriteFoods: {
+    marginTop: 16,
+  },
+  favoriteFoodsButton: {
+    minHeight: 44,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: '#e7eedc',
+  },
+  favoriteFoodsList: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#dce3d5',
+    borderRadius: 8,
+    backgroundColor: '#fbfcf8',
+    overflow: 'hidden',
+  },
+  favoriteFoodsEmpty: {
+    padding: 14,
+    gap: 4,
+  },
+  favoriteFoodRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderColor: '#eef0e9',
+    paddingRight: 6,
+  },
+  favoriteFoodOption: {
+    flex: 1,
+    minHeight: 44,
+    padding: 12,
+  },
+  favoriteFoodActions: {
+    marginTop: 12,
+    alignItems: 'flex-start',
+    gap: 4,
+  },
   label: {
     fontSize: 13,
     color: '#607354',

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadRecords, saveRecords } from '../../application/record-repository';
-import { emptyStore, type Day, type Store } from '../../domain/data';
+import { emptyStore, type Day, type FavoriteFood, type Store } from '../../domain/data';
+import { upsertFavoriteFood } from '../../domain/favorite-foods';
 import { readStored, writeStored } from '../../infrastructure/platform';
 import { restoreStored } from '../../infrastructure/services';
 
@@ -106,6 +107,28 @@ export function useTrackerRecords() {
     );
   }
 
+  function saveFavoriteFood(food: FavoriteFood) {
+    return persist(
+      {
+        ...data,
+        favoriteFoods: upsertFavoriteFood(data.favoriteFoods ?? [], food),
+      },
+      false,
+      '즐겨찾는 음식 저장 성공',
+    );
+  }
+
+  function removeFavoriteFood(id: string) {
+    return persist(
+      {
+        ...data,
+        favoriteFoods: (data.favoriteFoods ?? []).filter((food) => food.id !== id),
+      },
+      false,
+      '즐겨찾기 해제 성공',
+    );
+  }
+
   async function refresh() {
     if (!saving.current) {
       const revision = dataRevision.current;
@@ -126,6 +149,8 @@ export function useTrackerRecords() {
     toast,
     setToast,
     updateDay,
+    saveFavoriteFood,
+    removeFavoriteFood,
     persist,
     refresh,
   };

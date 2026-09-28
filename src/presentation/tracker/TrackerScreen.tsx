@@ -23,8 +23,20 @@ import { useTrackerRecords } from './useTrackerRecords';
 export default function TrackerScreen() {
   const { width } = useWindowDimensions();
   const wide = width >= 950;
-  const { data, loaded, blocked, busy, message, setMessage, toast, setToast, updateDay, refresh } =
-    useTrackerRecords();
+  const {
+    data,
+    loaded,
+    blocked,
+    busy,
+    message,
+    setMessage,
+    toast,
+    setToast,
+    updateDay,
+    saveFavoriteFood,
+    removeFavoriteFood,
+    refresh,
+  } = useTrackerRecords();
   const [date, setDate] = useState(localDate);
   const [editor, setEditor] = useState<Editor | null>(null);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
@@ -109,10 +121,13 @@ export default function TrackerScreen() {
         <RecordEditor
           editor={editor}
           day={data.days[editor.date] ?? emptyDay()}
+          favoriteFoods={data.favoriteFoods ?? []}
           busy={busy}
           onSave={(next, target) =>
             updateDay(next, target, editor.kind === 'meal' ? '식단 저장 성공' : '운동 저장 성공')
           }
+          onSaveFavorite={saveFavoriteFood}
+          onRemoveFavorite={removeFavoriteFood}
           onClose={() => setEditor(null)}
         />
       )}
