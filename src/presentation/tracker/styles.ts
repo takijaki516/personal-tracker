@@ -228,6 +228,18 @@ export const styles = StyleSheet.create({
     borderColor: '#eef0e9',
     borderRadius: 8,
   },
+  workoutOptions: {
+    maxHeight: 240,
+    borderWidth: 1,
+    borderColor: '#dce3d5',
+    borderRadius: 8,
+    backgroundColor: '#fbfcf8',
+  },
+  workoutOption: {
+    minHeight: 44,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
   workoutSetFields: {
     flexDirection: 'row',
     gap: 10,

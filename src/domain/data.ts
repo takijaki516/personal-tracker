@@ -1,12 +1,12 @@
 export type Meal = { id: string; name: string; slot: string; calories: number };
 
 export const BODY_PARTS = {
-  chest: '가슴',
-  back: '등',
-  biceps: '이두',
-  triceps: '삼두',
-  shoulders: '어깨',
-  legs: '하체',
+  chest: 'Chest',
+  back: 'Back',
+  biceps: 'Biceps',
+  triceps: 'Triceps',
+  shoulders: 'Shoulders',
+  legs: 'Legs',
 } as const;
 
 export type BodyPart = keyof typeof BODY_PARTS;

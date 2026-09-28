@@ -2,7 +2,6 @@ import * as Crypto from 'expo-crypto';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, Text, View } from 'react-native';
 import {
-  BODY_PARTS,
   MAX_REPS,
   MAX_WEIGHT_KG,
   MAX_WORKOUT_SETS,
@@ -10,10 +9,12 @@ import {
   type Day,
   type WorkoutSet,
 } from '../../domain/data';
+import { WORKOUT_OPTIONS } from '../../domain/workout-options';
 import Button from './Button';
 import Field from './Field';
 import { styles as s } from './styles';
 import type { SaveResult } from './useTrackerRecords';
+import WorkoutSelect from './WorkoutSelect';
 
 export type RecordKind = 'meal' | 'workout';
 
@@ -64,13 +65,13 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
     );
   }
   async function submit() {
-    if (!name.trim()) {
-      setFormError('이름을 입력해 주세요.');
-      return;
-    }
     const current = day;
     const next = { ...current };
     if (editor.kind === 'meal') {
+      if (!name.trim()) {
+        setFormError('이름을 입력해 주세요.');
+        return;
+      }
       const calories = Number(amount.trim());
       if (!amount.trim() || !Number.isFinite(calories) || calories < 0 || calories > 20000) {
         setFormError('칼로리 0~20,000 범위로 입력해 주세요.');
@@ -89,6 +90,10 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
     if (editor.kind === 'workout') {
       if (bodyPart === null) {
         setFormError('운동 부위를 선택해 주세요.');
+        return;
+      }
+      if (!name.trim()) {
+        setFormError('운동을 선택해 주세요.');
         return;
       }
       const parsedSets: WorkoutSet[] = [];
@@ -156,32 +161,29 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
                 ))}
               </View>
             )}
-            <Field
-              label={editor.kind === 'meal' ? '음식 이름' : '운동 이름'}
-              value={name}
-              onChangeText={setName}
-            />
+            {editor.kind === 'meal' && (
+              <Field label="음식 이름" value={name} onChangeText={setName} />
+            )}
             {editor.kind === 'workout' && (
               <>
-                <Text style={[s.label, { marginTop: 20 }]}>운동 부위</Text>
-                <View
-                  style={[
-                    s.row,
-                    {
-                      flexWrap: 'wrap',
-                      marginTop: 8,
-                    },
-                  ]}
-                >
-                  {(Object.entries(BODY_PARTS) as [BodyPart, string][]).map(([part, label]) => (
-                    <Button
-                      key={part}
-                      label={label}
-                      selected={bodyPart === part}
-                      onPress={() => setBodyPart(part)}
-                    />
-                  ))}
-                </View>
+                <WorkoutSelect
+                  name={name}
+                  bodyPart={bodyPart}
+                  options={WORKOUT_OPTIONS}
+                  disabled={busy}
+                  onBodyPartChange={(part) => {
+                    if (part !== bodyPart) {
+                      setName('');
+                    }
+                    setBodyPart(part);
+                    setFormError('');
+                  }}
+                  onSelect={(option) => {
+                    setName(option.name);
+                    setBodyPart(option.bodyPart);
+                    setFormError('');
+                  }}
+                />
                 <Text style={[s.label, { marginTop: 20 }]}>세트 ({sets.length})</Text>
                 {sets.map((set, index) => (
                   <View key={index} style={s.workoutSet}>
