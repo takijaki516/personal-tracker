@@ -1,6 +1,23 @@
 export type Meal = { id: string; name: string; slot: string; calories: number };
 
-export type Workout = { id: string; name: string };
+export const BODY_PARTS = {
+  chest: '가슴',
+  back: '등',
+  biceps: '이두',
+  triceps: '삼두',
+  shoulders: '어깨',
+  legs: '하체',
+} as const;
+
+export type BodyPart = keyof typeof BODY_PARTS;
+
+export type WorkoutSet = { reps: number; weightKg: number };
+
+export type Workout = { id: string; name: string; bodyPart: BodyPart; sets: WorkoutSet[] };
+
+export const MAX_WORKOUT_SETS = 100;
+export const MAX_REPS = 1000;
+export const MAX_WEIGHT_KG = 1000;
 
 export type Day = { meals: Meal[]; workouts: Workout[] };
 
@@ -67,8 +84,18 @@ export function parseStore(raw: string): Store {
         !short(workout.id, 100) ||
         ids.has(workout.id) ||
         !short(workout.name, 100) ||
-        ('minutes' in workout && !bounded(workout.minutes, 1440)) ||
-        ('note' in workout && (typeof workout.note !== 'string' || workout.note.length > 500))
+        typeof workout.bodyPart !== 'string' ||
+        !Object.hasOwn(BODY_PARTS, workout.bodyPart) ||
+        !Array.isArray(workout.sets) ||
+        workout.sets.length === 0 ||
+        workout.sets.length > MAX_WORKOUT_SETS ||
+        workout.sets.some(
+          (set) =>
+            !object(set) ||
+            !Number.isInteger(set.reps) ||
+            !bounded(set.reps, MAX_REPS) ||
+            !bounded(set.weightKg, MAX_WEIGHT_KG, true),
+        )
       ) {
         throw new Error('운동 기록을 확인해 주세요.');
       }
@@ -83,9 +110,14 @@ export function parseStore(raw: string): Store {
         date,
         {
           meals: day.meals,
-          workouts: day.workouts.map(({ id, name }) => ({
+          workouts: day.workouts.map(({ id, name, bodyPart, sets }) => ({
             id,
             name,
+            bodyPart,
+            sets: sets.map(({ reps, weightKg }) => ({
+              reps,
+              weightKg,
+            })),
           })),
         },
       ]),

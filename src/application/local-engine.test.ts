@@ -11,6 +11,13 @@ const data = {
         {
           id: 'walk',
           name: '산책',
+          bodyPart: 'legs',
+          sets: [
+            {
+              reps: 20,
+              weightKg: 0,
+            },
+          ],
         },
       ],
     },

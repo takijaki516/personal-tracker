@@ -221,6 +221,20 @@ export const styles = StyleSheet.create({
     color: '#263a30',
     minHeight: 46,
   },
+  workoutSet: {
+    marginTop: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#eef0e9',
+    borderRadius: 8,
+  },
+  workoutSetFields: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  workoutSetField: {
+    flex: 1,
+  },
   error: {
     fontSize: 12,
     lineHeight: 20,

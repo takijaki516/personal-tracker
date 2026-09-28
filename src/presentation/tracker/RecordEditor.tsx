@@ -1,7 +1,15 @@
 import * as Crypto from 'expo-crypto';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, Text, View } from 'react-native';
-import type { Day } from '../../domain/data';
+import {
+  BODY_PARTS,
+  MAX_REPS,
+  MAX_WEIGHT_KG,
+  MAX_WORKOUT_SETS,
+  type BodyPart,
+  type Day,
+  type WorkoutSet,
+} from '../../domain/data';
 import Button from './Button';
 import Field from './Field';
 import { styles as s } from './styles';
@@ -10,6 +18,8 @@ import type { SaveResult } from './useTrackerRecords';
 export type RecordKind = 'meal' | 'workout';
 
 export type Editor = { kind: RecordKind; id: string | null; date: string };
+
+type SetInput = { reps: string; weightKg: string };
 
 type Props = {
   editor: Editor;
@@ -28,7 +38,31 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
   const [name, setName] = useState(item?.name ?? '');
   const [amount, setAmount] = useState(meal ? String(meal.calories) : '');
   const [slot, setSlot] = useState(meal?.slot ?? '아침');
+  const [bodyPart, setBodyPart] = useState<BodyPart | null>(workout?.bodyPart ?? null);
+  const [sets, setSets] = useState<SetInput[]>(
+    workout?.sets.map((set) => ({
+      reps: String(set.reps),
+      weightKg: String(set.weightKg),
+    })) ?? [
+      {
+        reps: '',
+        weightKg: '',
+      },
+    ],
+  );
   const [formError, setFormError] = useState('');
+  function updateSet(index: number, field: keyof SetInput, value: string) {
+    setSets((current) =>
+      current.map((set, position) =>
+        position === index
+          ? {
+              ...set,
+              [field]: value,
+            }
+          : set,
+      ),
+    );
+  }
   async function submit() {
     if (!name.trim()) {
       setFormError('이름을 입력해 주세요.');
@@ -53,9 +87,37 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
         : [...current.meals, item];
     }
     if (editor.kind === 'workout') {
+      if (bodyPart === null) {
+        setFormError('운동 부위를 선택해 주세요.');
+        return;
+      }
+      const parsedSets: WorkoutSet[] = [];
+      for (const [index, set] of sets.entries()) {
+        const reps = Number(set.reps.trim());
+        const weightKg = Number(set.weightKg.trim());
+        if (!set.reps.trim() || !Number.isInteger(reps) || reps < 1 || reps > MAX_REPS) {
+          setFormError(`${index + 1}세트의 횟수를 1~${MAX_REPS} 범위의 정수로 입력해 주세요.`);
+          return;
+        }
+        if (
+          !set.weightKg.trim() ||
+          !Number.isFinite(weightKg) ||
+          weightKg < 0 ||
+          weightKg > MAX_WEIGHT_KG
+        ) {
+          setFormError(`${index + 1}세트의 중량을 0~${MAX_WEIGHT_KG}kg 범위로 입력해 주세요.`);
+          return;
+        }
+        parsedSets.push({
+          reps,
+          weightKg,
+        });
+      }
       const item = {
         id: editor.id ?? Crypto.randomUUID(),
         name: name.trim(),
+        bodyPart,
+        sets: parsedSets,
       };
       next.workouts = editor.id
         ? current.workouts.map((w) => (w.id === editor.id ? item : w))
@@ -99,6 +161,80 @@ export default function RecordEditor({ editor, day, busy, onSave, onClose }: Pro
               value={name}
               onChangeText={setName}
             />
+            {editor.kind === 'workout' && (
+              <>
+                <Text style={[s.label, { marginTop: 20 }]}>운동 부위</Text>
+                <View
+                  style={[
+                    s.row,
+                    {
+                      flexWrap: 'wrap',
+                      marginTop: 8,
+                    },
+                  ]}
+                >
+                  {(Object.entries(BODY_PARTS) as [BodyPart, string][]).map(([part, label]) => (
+                    <Button
+                      key={part}
+                      label={label}
+                      selected={bodyPart === part}
+                      onPress={() => setBodyPart(part)}
+                    />
+                  ))}
+                </View>
+                <Text style={[s.label, { marginTop: 20 }]}>세트 ({sets.length})</Text>
+                {sets.map((set, index) => (
+                  <View key={index} style={s.workoutSet}>
+                    <View style={s.between}>
+                      <Text style={s.body}>{index + 1}세트</Text>
+                      {sets.length > 1 && (
+                        <Button
+                          label="세트 삭제"
+                          disabled={busy}
+                          onPress={() =>
+                            setSets((current) => current.filter((_, i) => i !== index))
+                          }
+                        />
+                      )}
+                    </View>
+                    <View style={s.workoutSetFields}>
+                      <View style={s.workoutSetField}>
+                        <Field
+                          label="횟수 (reps)"
+                          value={set.reps}
+                          onChangeText={(value) => updateSet(index, 'reps', value)}
+                          numeric
+                          maxLength={4}
+                        />
+                      </View>
+                      <View style={s.workoutSetField}>
+                        <Field
+                          label="중량 (kg)"
+                          value={set.weightKg}
+                          onChangeText={(value) => updateSet(index, 'weightKg', value)}
+                          numeric
+                          maxLength={7}
+                        />
+                      </View>
+                    </View>
+                    <Text style={s.caption}>0kg은 Body weight로 표시됩니다.</Text>
+                  </View>
+                ))}
+                <Button
+                  label="＋ 세트 추가"
+                  disabled={busy || sets.length >= MAX_WORKOUT_SETS}
+                  onPress={() =>
+                    setSets((current) => [
+                      ...current,
+                      {
+                        reps: '',
+                        weightKg: '',
+                      },
+                    ])
+                  }
+                />
+              </>
+            )}
             {editor.kind === 'meal' && (
               <Field
                 label="칼로리 (kcal)"

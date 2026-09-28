@@ -121,7 +121,7 @@ export function parseDocument(raw: string): SyncDocument {
         if (entry.kind !== 'workout' || entry.value === null) {
           return [key, entry];
         }
-        const { id, name } = entry.value as Workout;
+        const { id, name, bodyPart, sets } = entry.value as Workout;
         return [
           key,
           {
@@ -129,6 +129,11 @@ export function parseDocument(raw: string): SyncDocument {
             value: {
               id,
               name,
+              bodyPart,
+              sets: sets.map(({ reps, weightKg }) => ({
+                reps,
+                weightKg,
+              })),
             },
           },
         ];

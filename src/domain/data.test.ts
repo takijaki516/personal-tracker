@@ -17,7 +17,22 @@ describe('backup validation', () => {
           workouts: [
             {
               id: 'b',
-              name: '산책',
+              name: '벤치프레스',
+              bodyPart: 'chest',
+              sets: [
+                {
+                  reps: 10,
+                  weightKg: 40,
+                },
+                {
+                  reps: 8,
+                  weightKg: 45,
+                },
+                {
+                  reps: 6,
+                  weightKg: 0,
+                },
+              ],
             },
           ],
         },
@@ -26,7 +41,7 @@ describe('backup validation', () => {
     expect(parseStore(JSON.stringify(store))).toEqual(store);
     expect(parseStore(JSON.stringify(emptyStore()))).toEqual(emptyStore());
   });
-  it('drops minutes and notes from older workout backups', () => {
+  it('rejects workouts without a body part or sets', () => {
     const legacy = {
       version: 1,
       days: {
@@ -36,19 +51,12 @@ describe('backup validation', () => {
             {
               id: 'walk',
               name: '산책',
-              minutes: 30,
-              note: '강변',
             },
           ],
         },
       },
     };
-    expect(parseStore(JSON.stringify(legacy)).days['2026-09-14'].workouts).toEqual([
-      {
-        id: 'walk',
-        name: '산책',
-      },
-    ]);
+    expect(() => parseStore(JSON.stringify(legacy))).toThrow('운동 기록을 확인해 주세요.');
   });
   it('drops weight from an older backup while keeping other records', () => {
     const legacy = {
@@ -135,7 +143,71 @@ describe('backup validation', () => {
             {
               id: 'walk',
               name: '산책',
-              minutes: -1,
+              bodyPart: 'chest',
+              sets: [
+                {
+                  reps: 0,
+                  weightKg: 10,
+                },
+              ],
+            },
+          ],
+        },
+      },
+    },
+    {
+      version: 1,
+      days: {
+        '2026-09-14': {
+          meals: [],
+          workouts: [
+            {
+              id: 'walk',
+              name: '산책',
+              bodyPart: 'arms',
+              sets: [
+                {
+                  reps: 10,
+                  weightKg: 0,
+                },
+              ],
+            },
+          ],
+        },
+      },
+    },
+    {
+      version: 1,
+      days: {
+        '2026-09-14': {
+          meals: [],
+          workouts: [
+            {
+              id: 'walk',
+              name: '산책',
+              bodyPart: 'legs',
+              sets: [],
+            },
+          ],
+        },
+      },
+    },
+    {
+      version: 1,
+      days: {
+        '2026-09-14': {
+          meals: [],
+          workouts: [
+            {
+              id: 'walk',
+              name: '산책',
+              bodyPart: 'legs',
+              sets: [
+                {
+                  reps: 10,
+                  weightKg: -1,
+                },
+              ],
             },
           ],
         },

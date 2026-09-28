@@ -107,35 +107,51 @@ describe('record synchronization', () => {
     expect(parsed.entries).toEqual({});
     expect(snapshot(mergeDocuments(newDocument('new-device'), parsed))).toEqual(emptyStore());
   });
-  it('drops minutes and notes from older workout sync entries', () => {
-    const legacy = {
-      ...newDocument('older-device'),
-      entries: {
-        '["2026-09-15","workout","walk"]': {
-          date,
-          kind: 'workout',
-          id: 'walk',
-          value: {
-            id: 'walk',
-            name: '산책',
-            minutes: 30,
-            note: '강변',
-          },
-          counter: 0,
-          device: 'older-device',
+  it('preserves distinct sets and bodyweight through synchronization', () => {
+    const store: Store = {
+      version: 1,
+      days: {
+        [date]: {
+          ...emptyDay(),
+          workouts: [
+            {
+              id: 'bench',
+              name: '벤치프레스',
+              bodyPart: 'chest',
+              sets: [
+                {
+                  reps: 10,
+                  weightKg: 40,
+                },
+                {
+                  reps: 8,
+                  weightKg: 45,
+                },
+                {
+                  reps: 6,
+                  weightKg: 0,
+                },
+              ],
+            },
+          ],
         },
       },
     };
-    const parsed = parseDocument(JSON.stringify(legacy));
-    expect(parsed.entries['["2026-09-15","workout","walk"]'].value).toEqual({
-      id: 'walk',
-      name: '산책',
-    });
-    expect(snapshot(parsed).days[date].workouts).toEqual([
-      {
-        id: 'walk',
-        name: '산책',
-      },
-    ]);
+    const doc = editDocument(newDocument('a'), emptyStore(), store);
+    expect(snapshot(parseDocument(JSON.stringify(doc)))).toEqual(store);
+    expect(snapshot(mergeDocuments(newDocument('b'), doc))).toEqual(store);
+    const invalid = structuredClone(doc);
+    Object.values(invalid.entries)[0].value = {
+      id: 'bench',
+      name: '벤치프레스',
+      bodyPart: 'chest',
+      sets: [
+        {
+          reps: -1,
+          weightKg: 40,
+        },
+      ],
+    };
+    expect(() => parseDocument(JSON.stringify(invalid))).toThrow('운동 기록을 확인해 주세요.');
   });
 });

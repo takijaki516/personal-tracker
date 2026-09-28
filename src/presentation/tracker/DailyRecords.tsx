@@ -1,5 +1,5 @@
 import { Text, View } from 'react-native';
-import type { Day } from '../../domain/data';
+import { BODY_PARTS, type Day } from '../../domain/data';
 import Button from './Button';
 import { formatDateWithWeekday } from './calendar';
 import type { RecordKind } from './RecordEditor';
@@ -54,6 +54,15 @@ export default function DailyRecords({ date, day, locked, onEdit, onRemove }: Pr
             <View style={s.record} key={w.id}>
               <View style={{ flex: 1 }}>
                 <Text style={s.body}>{w.name}</Text>
+                <Text style={s.caption}>
+                  {BODY_PARTS[w.bodyPart]} · {w.sets.length}세트
+                </Text>
+                {w.sets.map((set, index) => (
+                  <Text key={index} style={s.caption}>
+                    {index + 1}세트 · {set.reps} reps ·{' '}
+                    {set.weightKg === 0 ? 'Body weight' : `${set.weightKg}kg`}
+                  </Text>
+                ))}
               </View>
               <Button label="수정" disabled={locked} onPress={() => onEdit('workout', w.id)} />
               <Button label="삭제" disabled={locked} onPress={() => onRemove('workouts', w.id)} />

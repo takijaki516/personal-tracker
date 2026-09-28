@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { emptyDay, emptyStore } from '../src/domain/data';
+import { emptyDay, emptyStore, type Store } from '../src/domain/data';
 import { editDocument, newDocument, parseDocument, snapshot } from '../src/domain/sync-model';
 import { encodeBytes, parsePairing, seal, unseal } from '../src/infrastructure/wire';
 import { createLanServer } from './lan-server';
@@ -49,8 +49,8 @@ describe('encrypted local network transport', () => {
     await once(lan.server, 'listening');
     const address = lan.server.address() as { port: number };
     const url = `http://127.0.0.1:${address.port}`;
-    const data = {
-      version: 1 as const,
+    const data: Store = {
+      version: 1,
       days: {
         '2026-09-15': {
           ...emptyDay(),
@@ -58,6 +58,13 @@ describe('encrypted local network transport', () => {
             {
               id: 'walk',
               name: '산책',
+              bodyPart: 'legs',
+              sets: [
+                {
+                  reps: 20,
+                  weightKg: 0,
+                },
+              ],
             },
           ],
         },
