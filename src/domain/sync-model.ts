@@ -1,8 +1,16 @@
-import { emptyDay, emptyStore, isDate, parseStore, type Store, type Workout } from './data';
+import {
+  emptyDay,
+  emptyStore,
+  isDate,
+  parseStore,
+  type FavoriteFood,
+  type Store,
+  type Workout,
+} from './data';
 
 export type Entry = {
   date: string;
-  kind: 'meal' | 'workout';
+  kind: 'meal' | 'workout' | 'favorite-food';
   id: string;
   value: unknown;
   counter: number;
@@ -40,6 +48,10 @@ export function snapshot(doc: SyncDocument): Store {
   const store = emptyStore();
   for (const [, e] of Object.entries(doc.entries).sort(([a], [b]) => order(a, b))) {
     if (e.value === null) {
+      continue;
+    }
+    if (e.kind === 'favorite-food') {
+      (store.favoriteFoods ??= []).push(e.value as FavoriteFood);
       continue;
     }
     const day = (store.days[e.date] ??= emptyDay());
@@ -90,8 +102,8 @@ export function parseDocument(raw: string): SyncDocument {
   for (const [key, e] of Object.entries(d.entries) as [string, Entry | LegacyWeightEntry][]) {
     if (
       !e ||
-      !isDate(e.date) ||
-      !['meal', 'workout', 'weight'].includes(e.kind) ||
+      (e.kind === 'favorite-food' ? e.date !== '' : !isDate(e.date)) ||
+      !['meal', 'workout', 'weight', 'favorite-food'].includes(e.kind) ||
       !validId(e.id) ||
       !validId(e.device) ||
       !Number.isSafeInteger(e.counter) ||
@@ -160,6 +172,16 @@ export function parseDocument(raw: string): SyncDocument {
 
 function flatten(store: Store): Record<string, Omit<Entry, 'counter' | 'device'>> {
   const result: ReturnType<typeof flatten> = {};
+  // Favorites belong to the whole library rather than a calendar day.
+  for (const value of store.favoriteFoods ?? []) {
+    const entry = {
+      date: '',
+      kind: 'favorite-food' as const,
+      id: value.id,
+      value,
+    };
+    result[entryKey(entry)] = entry;
+  }
   for (const [date, day] of Object.entries(store.days)) {
     for (const [kind, values] of [
       ['meal', day.meals],

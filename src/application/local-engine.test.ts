@@ -96,4 +96,39 @@ describe('local persistence and backups', () => {
     await f.engine.write(JSON.stringify(data));
     expect(JSON.parse(await f.engine.read())).toEqual(data);
   });
+  it('preserves favorites after a failed write and accepts a repeated registration', async () => {
+    const f = fixture();
+    const favorites = {
+      ...emptyStore(),
+      favoriteFoods: [
+        {
+          id: 'rice',
+          name: '현미밥',
+          calories: 300,
+        },
+      ],
+    };
+    await f.engine.write(JSON.stringify(favorites));
+    f.commit.mockRejectedValueOnce(new Error('disk full'));
+    await expect(f.engine.write(JSON.stringify(emptyStore()))).rejects.toThrow('disk full');
+    expect(JSON.parse(await f.engine.read())).toEqual(favorites);
+    const before = await f.engine.document();
+    await f.engine.write(JSON.stringify(favorites));
+    expect(await f.engine.document()).toEqual(before);
+    await expect(
+      f.engine.write(
+        JSON.stringify({
+          ...favorites,
+          favoriteFoods: [
+            {
+              id: 'rice',
+              name: '현미밥',
+              calories: -1,
+            },
+          ],
+        }),
+      ),
+    ).rejects.toThrow('즐겨찾는 음식 목록');
+    expect(JSON.parse(await f.engine.read())).toEqual(favorites);
+  });
 });
