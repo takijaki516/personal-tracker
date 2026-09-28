@@ -20,6 +20,7 @@ import RecordEditor, { type Editor, type RecordKind } from './RecordEditor';
 import { styles as s } from './styles';
 import Toast from './Toast';
 import TrackerSidebar from './TrackerSidebar';
+import TrackerTabs, { type TrackerTab } from './TrackerTabs';
 import { useTrackerRecords } from './useTrackerRecords';
 
 export default function TrackerScreen() {
@@ -41,6 +42,7 @@ export default function TrackerScreen() {
     refresh,
   } = useTrackerRecords();
   const [date, setDate] = useState(localDate);
+  const [tab, setTab] = useState<TrackerTab>('home');
   const [editor, setEditor] = useState<Editor | null>(null);
   const [goalsEditorOpen, setGoalsEditorOpen] = useState(false);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
@@ -48,6 +50,7 @@ export default function TrackerScreen() {
   const scrollOffset = useRef(0);
   const returnScrollOffset = useRef<number | null>(null);
   const pageOpen = editor?.kind === 'meal' || goalsEditorOpen;
+  const homeSelected = tab === 'home';
   const day = data.days[date] ?? emptyDay();
 
   const closeEditor = useCallback(() => {
@@ -79,6 +82,18 @@ export default function TrackerScreen() {
     });
     return () => cancelAnimationFrame(frame);
   }, [pageOpen, restoreRecordScroll]);
+
+  function selectTab(next: TrackerTab) {
+    if (next === tab) {
+      return;
+    }
+    scrollOffset.current = 0;
+    recordsScroll.current?.scrollTo({
+      y: 0,
+      animated: false,
+    });
+    setTab(next);
+  }
 
   function openEditor(kind: RecordKind, id: string | null = null) {
     if (kind === 'meal') {
@@ -130,7 +145,9 @@ export default function TrackerScreen() {
       >
         {wide && (
           <TrackerSidebar
+            selected={homeSelected}
             onSelectToday={() => {
+              selectTab('home');
               setDate(localDate());
             }}
           />
@@ -168,6 +185,7 @@ export default function TrackerScreen() {
             )}
             <View style={s.columns}>
               <DailyRecords
+                tab={tab}
                 date={date}
                 day={day}
                 nutritionGoals={data.nutritionGoals ?? {}}
@@ -180,11 +198,19 @@ export default function TrackerScreen() {
                 onRemove={remove}
               />
             </View>
-            <SyncPanel
-              disabled={locked || !!editor || goalsEditorOpen || !!confirmation}
-              onChange={refresh}
-            />
+            {/* Keep maintenance and sync subscriptions active on every tab. */}
+            <View
+              style={[!homeSelected && s.hidden]}
+              accessibilityElementsHidden={!homeSelected}
+              importantForAccessibility={homeSelected ? 'auto' : 'no-hide-descendants'}
+            >
+              <SyncPanel
+                disabled={locked || !!editor || goalsEditorOpen || !!confirmation}
+                onChange={refresh}
+              />
+            </View>
           </ScrollView>
+          <TrackerTabs selected={tab} onSelect={selectTab} />
         </View>
       </View>
 

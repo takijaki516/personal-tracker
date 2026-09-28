@@ -2,12 +2,18 @@ import { Text, View } from 'react-native';
 import Button from './Button';
 import { styles as s } from './styles';
 
-export default function TrackerSidebar({ onSelectToday }: { onSelectToday: () => void }) {
+export default function TrackerSidebar({
+  selected,
+  onSelectToday,
+}: {
+  selected: boolean;
+  onSelectToday: () => void;
+}) {
   return (
     <View style={s.sidebar}>
       <Text style={s.subtitle}>나를 돌보는 작은 기록</Text>
       <View style={{ marginTop: 40 }}>
-        <Button label="◫ 나의 기록" selected onPress={onSelectToday} />
+        <Button label="◫ 나의 기록" selected={selected} onPress={onSelectToday} />
       </View>
       <View style={{ flex: 1 }} />
       <Text style={s.eyebrow}>EVERY LITTLE DAY</Text>
