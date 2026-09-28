@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   Platform,
   Pressable,
@@ -9,8 +9,12 @@ import {
   type BlurEvent,
 } from 'react-native';
 import type { FavoriteFood, Store } from '../../domain/data';
+import type { FoodSearchResult } from '../../domain/food-search';
 import { getFoodSuggestions } from '../../domain/food-suggestions';
+import { canSearchFoods } from '../../infrastructure/food-search';
+import FatSecretFoods from './FatSecretFoods';
 import { styles as s } from './styles';
+import { useFoodInputComposition } from './useFoodInputComposition';
 
 type Props = {
   value: string;
@@ -19,6 +23,7 @@ type Props = {
   disabled: boolean;
   onChangeText: (value: string) => void;
   onSelect: (food: FavoriteFood) => void;
+  onSearchSelect: (food: FoodSearchResult) => void;
 };
 
 type Option = { food: FavoriteFood; date?: string };
@@ -30,8 +35,12 @@ export default function FoodNameInput({
   disabled,
   onChangeText,
   onSelect,
+  onSearchSelect,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [composing, setComposing] = useState(false);
+  const input = useRef<TextInput | null>(null);
+  useFoodInputComposition(input, setComposing);
   const suggestions = useMemo(
     () => getFoodSuggestions(days, favoriteFoods, value),
     [days, favoriteFoods, value],
@@ -70,6 +79,7 @@ export default function FoodNameInput({
     <View style={s.field} onBlur={handleBlur}>
       <Text style={s.label}>음식 이름</Text>
       <TextInput
+        ref={input}
         accessibilityLabel="음식 이름"
         accessibilityRole="combobox"
         accessibilityState={{
@@ -128,6 +138,16 @@ export default function FoodNameInput({
               )}
             </View>
           ))}
+          {canSearchFoods() && (
+            <FatSecretFoods
+              query={value}
+              composing={composing}
+              onSelect={(food) => {
+                onSearchSelect(food);
+                setOpen(false);
+              }}
+            />
+          )}
         </View>
       )}
     </View>

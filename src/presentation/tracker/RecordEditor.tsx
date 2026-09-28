@@ -14,6 +14,7 @@ import {
   type WorkoutSet,
 } from '../../domain/data';
 import { findFavoriteFood, parseFoodInput } from '../../domain/favorite-foods';
+import { foodSearchSelection, type FoodSearchResult } from '../../domain/food-search';
 import { WORKOUT_OPTIONS } from '../../domain/workout-options';
 import Button from './Button';
 import FavoriteFoods from './FavoriteFoods';
@@ -79,6 +80,7 @@ export default function RecordEditor({
   );
   const [formError, setFormError] = useState('');
   const [favoriteMessage, setFavoriteMessage] = useState('');
+  const [selectedSearchFood, setSelectedSearchFood] = useState<FoodSearchResult | null>(null);
   const existingFavorite = findFavoriteFood(favoriteFoods, name);
   const favoriteActionLabel = existingFavorite ? '☆ 즐겨찾기 업데이트' : '☆ 즐겨찾기 등록';
 
@@ -92,6 +94,7 @@ export default function RecordEditor({
     });
     setFormError('');
     setFavoriteMessage('');
+    setSelectedSearchFood(null);
   }
 
   function readFood() {
@@ -262,8 +265,15 @@ export default function RecordEditor({
                   days={days}
                   favoriteFoods={favoriteFoods}
                   disabled={busy}
-                  onChangeText={setName}
+                  onChangeText={(value) => {
+                    setName(value);
+                    setSelectedSearchFood(null);
+                  }}
                   onSelect={selectFood}
+                  onSearchSelect={(food) => {
+                    selectFood(foodSearchSelection(food));
+                    setSelectedSearchFood(food);
+                  }}
                 />
               </>
             )}
@@ -342,6 +352,12 @@ export default function RecordEditor({
             )}
             {editor.kind === 'meal' && (
               <>
+                {selectedSearchFood && (
+                  <Text style={[s.caption, { marginTop: 12 }]}>
+                    FatSecret · {selectedSearchFood.servingText} 기준 영양정보입니다. 섭취량이
+                    다르면 아래 값을 조정해 주세요.
+                  </Text>
+                )}
                 <Field
                   label="총 칼로리 (kcal)"
                   value={amount}

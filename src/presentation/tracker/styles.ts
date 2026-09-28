@@ -265,6 +265,14 @@ export const styles = StyleSheet.create({
   foodSuggestionsEmpty: {
     padding: 12,
   },
+  foodSearchActions: {
+    padding: 12,
+    gap: 8,
+    alignItems: 'flex-start',
+  },
+  foodSearchOptions: {
+    maxHeight: 230,
+  },
   favoriteFoods: {
     marginTop: 16,
   },
