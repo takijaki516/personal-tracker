@@ -1,0 +1,335 @@
+import { describe, expect, it, vi } from 'vitest';
+import { emptyDay, emptyStore, parseStore, type Day, type Store } from '../domain/data';
+import { changeMealNutrition, changeMealQuantity } from '../domain/food-portion';
+import { foodSearchSelection } from '../domain/food-search';
+import { getDailyNutrition } from '../domain/nutrition-goals';
+import { editDocument, mergeDocuments, migrateStore, snapshot } from '../domain/sync-model';
+import type { SyncDocument } from '../domain/sync-model';
+import { createEngine, type LocalAdapter } from './local-engine';
+import { applyMealFoodInputs, createMealFoodInput, type MealFoodInput } from './meal-editor';
+import { loadRecords, saveRecords, type StoragePort } from './record-repository';
+
+const date = '2026-09-28';
+const rice = createMealFoodInput('rice', {
+  name: '현미밥',
+  calories: 300,
+  carbohydrates: 60,
+});
+const chicken = createMealFoodInput(
+  'chicken',
+  foodSearchSelection({
+    name: '닭가슴살',
+    servingText: '100g',
+    servingGrams: 100,
+    calories: 165,
+    carbohydrates: 0,
+    protein: 31,
+    fat: 3.6,
+    sourceUrl: 'https://www.fatsecret.kr/칼로리-영양소/닭가슴살',
+  }),
+);
+const storeWithDay = (day: Day): Store => ({
+  ...emptyStore(),
+  days: { [date]: day },
+});
+
+describe('multiple foods in a meal editor', () => {
+  it('saves all foods together with individual quantities and includes them in daily totals', async () => {
+    const inputs = [
+      rice,
+      {
+        ...chicken,
+        nutritionInput: changeMealQuantity(chicken.nutritionInput, '200'),
+      },
+    ];
+    const next = storeWithDay(applyMealFoodInputs(emptyDay(), '점심', inputs, null));
+    let raw: string | null = null;
+    const write = vi.fn<StoragePort['write']>(async (value) => {
+      raw = value;
+    });
+    const storage: StoragePort = {
+      read: async () => raw,
+      write,
+    };
+    await saveRecords(storage, next, emptyStore());
+    expect(write).toHaveBeenCalledTimes(1);
+    const loaded = await loadRecords(storage);
+    expect(loaded).toEqual(next);
+    expect(loaded.days[date].meals).toMatchObject([
+      {
+        id: 'rice',
+        slot: '점심',
+        calories: 300,
+        portion: {
+          quantity: 1,
+          unit: 'serving',
+        },
+      },
+      {
+        id: 'chicken',
+        slot: '점심',
+        calories: 330,
+        protein: 62,
+        portion: {
+          quantity: 200,
+          unit: 'g',
+        },
+      },
+    ]);
+    expect(
+      getDailyNutrition(loaded.days[date].meals).map(({ consumed, missing }) => ({
+        consumed,
+        missing,
+      })),
+    ).toEqual([
+      {
+        consumed: 630,
+        missing: 0,
+      },
+      {
+        consumed: 60,
+        missing: 0,
+      },
+      {
+        consumed: 62,
+        missing: 1,
+      },
+      {
+        consumed: 7.2,
+        missing: 1,
+      },
+    ]);
+    expect(parseStore(JSON.stringify(loaded))).toEqual(next);
+  });
+
+  it('keeps legacy records and other foods when editing one food and adding another', () => {
+    const day: Day = {
+      meals: [
+        {
+          id: 'breakfast',
+          name: '사과',
+          slot: '아침',
+          calories: 100,
+        },
+        {
+          id: 'rice',
+          name: '현미밥',
+          slot: '점심',
+          calories: 300,
+        },
+        {
+          id: 'soup',
+          name: '국',
+          slot: '점심',
+          calories: 50,
+        },
+      ],
+      workouts: [
+        {
+          id: 'walk',
+          name: '산책',
+          bodyPart: 'legs',
+          sets: [
+            {
+              reps: 20,
+              weightKg: 0,
+            },
+          ],
+        },
+      ],
+    };
+    const original = structuredClone(day);
+    const draft = createMealFoodInput('rice', day.meals[1]);
+    const next = applyMealFoodInputs(
+      day,
+      '저녁',
+      [
+        {
+          ...draft,
+          nutritionInput: changeMealQuantity(draft.nutritionInput, '0.5'),
+        },
+        chicken,
+      ],
+      'rice',
+    );
+    expect(next.meals).toMatchObject([
+      day.meals[0],
+      {
+        id: 'rice',
+        slot: '저녁',
+        calories: 150,
+      },
+      day.meals[2],
+      {
+        id: 'chicken',
+        slot: '저녁',
+        calories: 165,
+      },
+    ]);
+    expect(next.workouts).toEqual(day.workouts);
+    expect(day).toEqual(original);
+    expect(parseStore(JSON.stringify(storeWithDay(next))).days[date]).toEqual(next);
+  });
+
+  it('removes the edited food when its draft is removed and retains only the added foods', () => {
+    const day = applyMealFoodInputs(emptyDay(), '점심', [rice], null);
+    const next = applyMealFoodInputs(day, '점심', [chicken], 'rice');
+    expect(next.meals.map(({ id }) => id)).toEqual(['chicken']);
+    expect(day.meals.map(({ id }) => id)).toEqual(['rice']);
+  });
+
+  it('reuses draft IDs so repeated saves do not add duplicate foods', () => {
+    const first = applyMealFoodInputs(emptyDay(), '간식', [rice, chicken], null);
+    expect(applyMealFoodInputs(first, '간식', [rice, chicken], null)).toEqual(first);
+  });
+
+  it.each([
+    {
+      field: 'name',
+      input: {
+        ...chicken,
+        name: '',
+      },
+      message: '음식 이름',
+    },
+    {
+      field: 'quantity',
+      input: {
+        ...chicken,
+        nutritionInput: changeMealQuantity(chicken.nutritionInput, '0'),
+      },
+      message: '섭취량',
+    },
+    {
+      field: 'calories',
+      input: {
+        ...chicken,
+        nutritionInput: changeMealNutrition(chicken.nutritionInput, 'calories', ''),
+      },
+      message: '총 칼로리',
+    },
+    {
+      field: 'protein',
+      input: {
+        ...chicken,
+        nutritionInput: changeMealNutrition(chicken.nutritionInput, 'protein', '-1'),
+      },
+      message: '단백질',
+    },
+  ])('rejects the entire edit when the second food has an invalid $field', ({ input, message }) => {
+    const day = applyMealFoodInputs(emptyDay(), '아침', [rice], null);
+    const original = structuredClone(day);
+    expect(() => applyMealFoodInputs(day, '점심', [rice, input], 'rice')).toThrow(
+      `음식 2: ${message}`,
+    );
+    expect(day).toEqual(original);
+  });
+
+  it('rejects empty lists and duplicate IDs while allowing separate portions of the same food', () => {
+    expect(() => applyMealFoodInputs(emptyDay(), '아침', [], null)).toThrow('한 개 이상');
+    expect(() => applyMealFoodInputs(emptyDay(), '아침', [rice, rice], null)).toThrow('ID가 중복');
+    const another: MealFoodInput = {
+      ...rice,
+      id: 'another-rice',
+    };
+    expect(applyMealFoodInputs(emptyDay(), '아침', [rice, another], null).meals).toHaveLength(2);
+  });
+
+  it('keeps the previous store on a failed batch write and retries without duplicating foods', async () => {
+    let document: SyncDocument | null = null;
+    const commit = vi.fn<LocalAdapter['commit']>(async (next) => {
+      document = structuredClone(next);
+    });
+    const engine = createEngine({
+      load: async () => document,
+      commit,
+      legacy: async () => null,
+      backup: async () => {},
+      uuid: () => 'device',
+    });
+    const before = storeWithDay(applyMealFoodInputs(emptyDay(), '점심', [rice], null));
+    await engine.write(JSON.stringify(before));
+    const after = storeWithDay(
+      applyMealFoodInputs(
+        before.days[date],
+        '점심',
+        [
+          {
+            ...rice,
+            nutritionInput: changeMealQuantity(rice.nutritionInput, '0.5'),
+          },
+          chicken,
+        ],
+        'rice',
+      ),
+    );
+    commit.mockRejectedValueOnce(new Error('disk full'));
+    await expect(saveRecords(engine, after, before)).rejects.toThrow('disk full');
+    expect(await loadRecords(engine)).toEqual(before);
+    await saveRecords(engine, after, before);
+    const saved = await engine.document();
+    await saveRecords(engine, after, after);
+    expect(await engine.document()).toEqual(saved);
+    const loaded = await loadRecords(engine);
+    expect(loaded.days[date].meals).toEqual(expect.arrayContaining(after.days[date].meals));
+    expect(loaded.days[date].meals).toHaveLength(2);
+  });
+
+  it('keeps independent remote changes when a batch is saved, updated and deleted', () => {
+    const before = storeWithDay(applyMealFoodInputs(emptyDay(), '점심', [rice], null));
+    const original = migrateStore(before, 'local');
+    const remoteStore = storeWithDay(
+      applyMealFoodInputs(
+        before.days[date],
+        '간식',
+        [
+          createMealFoodInput('fruit', {
+            name: '사과',
+            calories: 100,
+          }),
+        ],
+        null,
+      ),
+    );
+    const remote = editDocument(
+      {
+        ...original,
+        device: 'remote',
+      },
+      before,
+      remoteStore,
+    );
+    const localStore = storeWithDay(
+      applyMealFoodInputs(
+        before.days[date],
+        '점심',
+        [
+          {
+            ...rice,
+            nutritionInput: changeMealQuantity(rice.nutritionInput, '0.5'),
+          },
+          chicken,
+        ],
+        'rice',
+      ),
+    );
+    const local = editDocument(remote, before, localStore);
+    const expected = [...localStore.days[date].meals, remoteStore.days[date].meals[1]];
+    expect(snapshot(local).days[date].meals).toEqual(expect.arrayContaining(expected));
+    expect(snapshot(local).days[date].meals).toHaveLength(3);
+    expect(snapshot(mergeDocuments(local, original))).toEqual(snapshot(local));
+    const current = snapshot(local);
+    const deleted = editDocument(
+      local,
+      current,
+      storeWithDay({
+        ...current.days[date],
+        meals: current.days[date].meals.filter((food) => food.id !== 'chicken'),
+      }),
+    );
+    expect(snapshot(mergeDocuments(deleted, local)).days[date].meals.map(({ id }) => id)).toEqual([
+      'fruit',
+      'rice',
+    ]);
+  });
+});
