@@ -7,6 +7,7 @@ export type Entry = {
   value: unknown;
   counter: number;
   device: string;
+  position?: number;
 };
 
 type LegacyWeightEntry = Omit<Entry, 'kind'> & { kind: 'weight' };
@@ -49,6 +50,19 @@ export function snapshot(doc: SyncDocument): Store {
       day.workouts.push(e.value as (typeof day.workouts)[number]);
     }
   }
+  for (const [date, day] of Object.entries(store.days)) {
+    day.workouts.sort((a, b) => {
+      const position = (id: string) =>
+        doc.entries[
+          entryKey({
+            date,
+            kind: 'workout',
+            id,
+          })
+        ].position ?? Number.MAX_SAFE_INTEGER;
+      return position(a.id) - position(b.id);
+    });
+  }
   return parseStore(JSON.stringify(store));
 }
 
@@ -83,6 +97,8 @@ export function parseDocument(raw: string): SyncDocument {
       !Number.isSafeInteger(e.counter) ||
       e.counter < 0 ||
       e.counter > d.clock ||
+      (e.position !== undefined &&
+        (e.kind !== 'workout' || !Number.isSafeInteger(e.position) || e.position < 1)) ||
       key !== entryKey(e)
     ) {
       throw new Error('올바르지 않은 동기화 기록입니다.');
@@ -149,12 +165,13 @@ function flatten(store: Store): Record<string, Omit<Entry, 'counter' | 'device'>
       ['meal', day.meals],
       ['workout', day.workouts],
     ] as const) {
-      for (const value of values) {
+      for (const [index, value] of values.entries()) {
         const e = {
           date,
           kind,
           id: value.id,
           value,
+          ...(kind === 'workout' ? { position: index + 1 } : {}),
         };
         result[entryKey(e)] = e;
       }
@@ -173,13 +190,23 @@ export function editDocument(doc: SyncDocument, before: Store, after: Store): Sy
     entries: { ...doc.entries },
   };
   for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) {
-    if (JSON.stringify(a[key]?.value) === JSON.stringify(b[key]?.value)) {
+    const valueUnchanged = JSON.stringify(a[key]?.value) === JSON.stringify(b[key]?.value);
+    const positionUnchanged = a[key]?.position === b[key]?.position;
+    const needsPosition = b[key]?.kind === 'workout' && doc.entries[key]?.position === undefined;
+    if (valueUnchanged && positionUnchanged && !needsPosition) {
       continue;
     }
-    const e = b[key] ?? {
+    let e = b[key] ?? {
       ...a[key],
       value: null,
     };
+    // Changing only the order must preserve a newer remote edit or deletion.
+    if (valueUnchanged && doc.entries[key]) {
+      e = {
+        ...doc.entries[key],
+        position: b[key]?.position,
+      };
+    }
     next.entries[key] = {
       ...e,
       counter: ++next.clock,
@@ -201,7 +228,8 @@ export function mergeDocuments(local: SyncDocument, remote: SyncDocument): SyncD
       ? 1
       : incoming.counter - old.counter ||
         order(incoming.device, old.device) ||
-        order(JSON.stringify(incoming.value), JSON.stringify(old.value));
+        order(JSON.stringify(incoming.value), JSON.stringify(old.value)) ||
+        (incoming.position ?? Number.MAX_SAFE_INTEGER) - (old.position ?? Number.MAX_SAFE_INTEGER);
     if (compare > 0) {
       next.entries[key] = incoming;
     }

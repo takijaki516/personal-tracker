@@ -156,6 +156,13 @@ export const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#f1f5eb',
   },
+  workoutOrder: {
+    fontSize: 11,
+    lineHeight: 19,
+    fontWeight: '600',
+    color: '#526174',
+    marginBottom: 2,
+  },
   tag: {
     fontSize: 11,
     padding: 7,

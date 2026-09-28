@@ -60,9 +60,10 @@ export default function DailyRecords({ date, day, locked, onEdit, onRemove }: Pr
             <Text style={s.caption}>기록이 없습니다.</Text>
           </View>
         ) : (
-          day.workouts.map((w) => (
+          day.workouts.map((w, workoutIndex) => (
             <View style={s.workoutCard} key={w.id}>
               <View style={{ flex: 1 }}>
+                <Text style={s.workoutOrder}>{workoutIndex + 1}번째 운동</Text>
                 <Text style={s.body}>{w.name}</Text>
                 <Text style={s.caption}>
                   {BODY_PARTS[w.bodyPart]} · 총 {w.sets.length}세트

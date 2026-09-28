@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { afterEach, describe, expect, it } from 'vitest';
-import { emptyDay, emptyStore, localDate } from '../src/domain/data';
+import { emptyDay, emptyStore, localDate, type Store } from '../src/domain/data';
 import { openStorage } from './storage';
 const dirs: string[] = [];
 afterEach(() => {
@@ -15,6 +15,42 @@ afterEach(() => {
   }
 });
 describe('actual SQLite disk storage', () => {
+  it('keeps workout order after restart and backup restore regardless of record IDs', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'exercise-db-'));
+    dirs.push(dir);
+    const date = localDate();
+    const data: Store = {
+      version: 1,
+      days: {
+        [date]: {
+          ...emptyDay(),
+          workouts: ['z-bench', 'a-incline'].map((id) => ({
+            id,
+            name: id,
+            bodyPart: 'chest',
+            sets: [
+              {
+                reps: 8,
+                weightKg: 60,
+              },
+            ],
+          })),
+        },
+      },
+    };
+    let store = openStorage(dir);
+    await store.engine.write(JSON.stringify(data));
+    await store.engine.dailyBackup();
+    const backup = store.backupRead(store.backups()[0].name);
+    expect(JSON.parse(backup)).toEqual(data);
+    store.close();
+    store = openStorage(dir);
+    expect(JSON.parse(await store.engine.read())).toEqual(data);
+    await store.engine.restore(JSON.stringify(emptyStore()));
+    await store.engine.restore(backup);
+    expect(JSON.parse(await store.engine.read())).toEqual(data);
+    store.close();
+  });
   it('persists across restart, backs up once per day and keeps pre-restore history', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'exercise-db-'));
     dirs.push(dir);

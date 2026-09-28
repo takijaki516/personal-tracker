@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { emptyDay, emptyStore, type Store } from './data';
+import { emptyDay, emptyStore, type Store, type Workout } from './data';
 import {
   editDocument,
   mergeDocuments,
@@ -27,7 +27,134 @@ function meal(id: string): Store {
     },
   };
 }
+function workouts(...ids: string[]): Store {
+  return {
+    version: 1,
+    days: {
+      [date]: {
+        ...emptyDay(),
+        workouts: ids.map((id) => ({
+          id,
+          name: id,
+          bodyPart: 'chest',
+          sets: [
+            {
+              reps: 8,
+              weightKg: 60,
+            },
+          ],
+        })),
+      },
+    },
+  };
+}
 describe('record synchronization', () => {
+  it('preserves workout insertion order through edits, deletion and repeated synchronization', () => {
+    const first = workouts('z-bench');
+    const initial = editDocument(newDocument('a'), emptyStore(), first);
+    const added = workouts('z-bench', 'a-incline', 'm-fly');
+    const doc = editDocument(initial, snapshot(initial), added);
+    expect(snapshot(parseDocument(JSON.stringify(doc)))).toEqual(added);
+    expect(editDocument(doc, snapshot(doc), snapshot(doc))).toEqual(doc);
+    const edited = structuredClone(added);
+    edited.days[date].workouts[0].sets[0].weightKg = 70;
+    const updated = editDocument(doc, snapshot(doc), edited);
+    expect(snapshot(updated)).toEqual(edited);
+    const removed = structuredClone(edited);
+    removed.days[date].workouts.splice(1, 1);
+    const deleted = editDocument(updated, snapshot(updated), removed);
+    const merged = mergeDocuments(deleted, doc);
+    expect(snapshot(merged)).toEqual(removed);
+    expect(snapshot(mergeDocuments(doc, deleted))).toEqual(removed);
+    expect(snapshot(mergeDocuments(merged, doc))).toEqual(removed);
+  });
+  it('preserves workout order from legacy backups and records explicit reordering', () => {
+    const store = workouts('z-bench', 'a-incline');
+    const doc = migrateStore(store, 'a');
+    expect(snapshot(doc)).toEqual(store);
+    const reversed = structuredClone(store);
+    reversed.days[date].workouts.reverse();
+    const reordered = editDocument(doc, snapshot(doc), reversed);
+    expect(snapshot(mergeDocuments(doc, reordered))).toEqual(reversed);
+  });
+  it('keeps a deterministic order for simultaneous additions from two devices', () => {
+    const first = workouts('z-bench');
+    const a = editDocument(newDocument('a'), emptyStore(), first);
+    const b = {
+      ...a,
+      device: 'b',
+    };
+    const aa = editDocument(a, first, workouts('z-bench', 'x-incline'));
+    const bb = editDocument(b, first, workouts('z-bench', 'a-fly'));
+    expect(snapshot(mergeDocuments(aa, bb))).toEqual(workouts('z-bench', 'a-fly', 'x-incline'));
+    expect(snapshot(mergeDocuments(aa, bb))).toEqual(snapshot(mergeDocuments(bb, aa)));
+  });
+  it('accepts old documents without order and rejects invalid positions', () => {
+    const doc = migrateStore(workouts('z-bench', 'a-incline'), 'a');
+    for (const entry of Object.values(doc.entries)) {
+      delete entry.position;
+    }
+    const old = parseDocument(JSON.stringify(doc));
+    const current = snapshot(old);
+    const added = structuredClone(current);
+    added.days[date].workouts.push(workouts('new').days[date].workouts[0]);
+    const updated = editDocument(old, current, added);
+    expect(snapshot(updated)).toEqual(added);
+    for (const position of [0, -1, 1.5, '1', null, Number.MAX_SAFE_INTEGER + 1]) {
+      const invalid = {
+        ...doc,
+        entries: structuredClone(doc.entries),
+      };
+      const key = Object.keys(invalid.entries)[0];
+      expect(() =>
+        parseDocument(
+          JSON.stringify({
+            ...invalid,
+            entries: {
+              ...invalid.entries,
+              [key]: {
+                ...invalid.entries[key],
+                position,
+              },
+            },
+          }),
+        ),
+      ).toThrow('올바르지 않은 동기화 기록입니다.');
+    }
+  });
+  it('does not overwrite remote edits when assigning positions to old records', () => {
+    const doc = migrateStore(workouts('bench'), 'a');
+    const entry = Object.values(doc.entries)[0];
+    delete entry.position;
+    const oldView = snapshot(doc);
+    entry.value = {
+      ...(entry.value as Workout),
+      name: 'Remote bench',
+    };
+    const updated = editDocument(doc, oldView, oldView);
+    expect(snapshot(updated).days[date].workouts[0].name).toBe('Remote bench');
+    entry.value = null;
+    expect(snapshot(editDocument(doc, oldView, oldView))).toEqual(emptyStore());
+  });
+  it('preserves remote workout edits when a stale local deletion changes their position', () => {
+    const original = workouts('z-bench', 'a-incline');
+    const doc = migrateStore(original, 'a');
+    const remote = structuredClone(original);
+    remote.days[date].workouts[1].sets[0].weightKg = 80;
+    const merged = editDocument(
+      {
+        ...doc,
+        device: 'b',
+      },
+      original,
+      remote,
+    );
+    const deleted = structuredClone(original);
+    deleted.days[date].workouts.shift();
+    const updated = snapshot(editDocument(merged, original, deleted));
+    expect(updated.days[date].workouts.map((w) => w.id)).toEqual(['a-incline']);
+    expect(updated.days[date].workouts[0].sets[0].weightKg).toBe(80);
+  });
   it('merges independent edits on the same day', () => {
     const a = editDocument(newDocument('a'), emptyStore(), meal('a'));
     const b = editDocument(newDocument('b'), emptyStore(), meal('b'));
