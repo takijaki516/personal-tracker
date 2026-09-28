@@ -11,6 +11,21 @@ export type MealFoodInput = {
   nutritionInput: MealNutritionInput;
 };
 
+export type MealSectionInput = {
+  slot: string;
+  foods: MealFoodInput[];
+};
+
+export class MealSectionError extends Error {
+  readonly slot: string;
+
+  constructor(slot: string, message: string) {
+    super(`${slot}: ${message}`);
+    this.name = 'MealSectionError';
+    this.slot = slot;
+  }
+}
+
 export function createMealFoodInput(id: string, food?: Omit<FavoriteFood, 'id'>): MealFoodInput {
   return {
     id,
@@ -58,4 +73,30 @@ export function applyMealFoodInputs(
     ...day,
     meals: [...meals, ...foods.filter((food) => !existingIds.has(food.id))],
   };
+}
+
+export function applyMealSectionInputs(day: Day, sections: MealSectionInput[]): Day {
+  if (sections.every((section) => section.foods.length === 0)) {
+    throw new Error('음식을 한 개 이상 추가해 주세요.');
+  }
+  const ids = new Set<string>();
+  let next = day;
+  for (const { slot, foods } of sections) {
+    if (foods.length === 0) {
+      continue;
+    }
+    try {
+      for (const food of foods) {
+        if (ids.has(food.id)) {
+          throw new Error('음식 기록 ID가 중복되었습니다.');
+        }
+        ids.add(food.id);
+      }
+      next = applyMealFoodInputs(next, slot, foods, null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '입력값을 확인해 주세요.';
+      throw new MealSectionError(slot, message);
+    }
+  }
+  return next;
 }
