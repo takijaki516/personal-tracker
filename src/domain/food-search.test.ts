@@ -107,6 +107,10 @@ describe('food search results', () => {
     },
     {
       ...food,
+      servingGrams: 100001,
+    },
+    {
+      ...food,
       sourceUrl: 'javascript:alert(1)',
     },
   ])('rejects invalid foods before they can fill the record editor', (value) => {
@@ -128,6 +132,18 @@ describe('food search results', () => {
       carbohydrates: 0,
       protein: 24,
       fat: 1.6,
+      portion: {
+        quantity: 110,
+        unit: 'g',
+        referenceQuantity: 110,
+        referenceNutrition: {
+          calories: 115,
+          carbohydrates: 0,
+          protein: 24,
+          fat: 1.6,
+        },
+        referenceText: '1팩 (110g)',
+      },
     });
   });
 
@@ -151,6 +167,13 @@ describe('food search results', () => {
     expect(foodSearchSelection(sparseFood)).toEqual({
       name: '닭가슴살',
       calories: 0,
+      portion: {
+        quantity: 1,
+        unit: 'serving',
+        referenceQuantity: 1,
+        referenceNutrition: { calories: 0 },
+        referenceText: '1개',
+      },
     });
   });
 });

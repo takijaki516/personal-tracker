@@ -1,5 +1,6 @@
 import { Text, View } from 'react-native';
 import { BODY_PARTS, MACRONUTRIENTS, type Day, type NutritionGoals } from '../../domain/data';
+import { formatFoodQuantity } from '../../domain/food-portion';
 import Button from './Button';
 import { formatDateWithWeekday } from './calendar';
 import NutritionSummary from './NutritionSummary';
@@ -49,6 +50,11 @@ export default function DailyRecords({
               <Text style={s.tag}>{m.slot}</Text>
               <View style={{ flex: 1 }}>
                 <Text style={s.body}>{m.name}</Text>
+                {m.portion && (
+                  <Text style={s.caption}>
+                    섭취량 {formatFoodQuantity(m.portion.quantity, m.portion.unit)}
+                  </Text>
+                )}
                 <Text style={s.caption}>총 칼로리 {m.calories} kcal</Text>
                 {MACRONUTRIENTS.map(({ key, label }) => (
                   <Text key={key} style={s.caption}>

@@ -1,9 +1,11 @@
 import {
   isMealAmount,
+  isFoodQuantity,
   MACRONUTRIENTS,
   MAX_MACRONUTRIENT_GRAMS,
   MAX_MEAL_CALORIES,
   type FavoriteFood,
+  type FoodNutrition,
 } from './data';
 
 export type FoodSearchResult = {
@@ -71,10 +73,7 @@ export function readFoodSearchResponse(value: unknown, query: string): FoodSearc
       !isMealAmount(food.calories, MAX_MEAL_CALORIES) ||
       !isSourceUrl(food.sourceUrl, false) ||
       (food.brand !== undefined && !isText(food.brand, 200)) ||
-      (food.servingGrams !== undefined &&
-        (typeof food.servingGrams !== 'number' ||
-          !Number.isFinite(food.servingGrams) ||
-          food.servingGrams <= 0))
+      (food.servingGrams !== undefined && !isFoodQuantity(food.servingGrams))
     ) {
       throw invalid();
     }
@@ -115,10 +114,19 @@ export function foodSearchSelection(food: FoodSearchResult): Omit<FavoriteFood, 
     name: brandedName.length <= 100 ? brandedName : food.name,
     calories: food.calories,
   };
+  const referenceNutrition: FoodNutrition = { calories: food.calories };
   for (const { key } of MACRONUTRIENTS) {
     if (food[key] !== undefined) {
       selected[key] = food[key];
+      referenceNutrition[key] = food[key];
     }
   }
+  selected.portion = {
+    quantity: food.servingGrams ?? 1,
+    unit: food.servingGrams === undefined ? 'serving' : 'g',
+    referenceQuantity: food.servingGrams ?? 1,
+    referenceNutrition,
+    referenceText: food.servingText,
+  };
   return selected;
 }

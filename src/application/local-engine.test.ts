@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { emptyDay, emptyStore } from '../domain/data';
+import { createFoodPortionInput, parsePortionedFoodInput } from '../domain/food-portion';
 import type { SyncDocument } from '../domain/sync-model';
 import { createEngine, type LocalAdapter } from './local-engine';
 const data = {
@@ -44,6 +45,64 @@ function fixture(raw: string | null = null) {
   };
 }
 describe('local persistence and backups', () => {
+  it('preserves portion data after failed writes and rejects inconsistent restored totals', async () => {
+    const f = fixture();
+    const food = parsePortionedFoodInput('식단', {
+      quantity: '200',
+      unit: 'g',
+      referenceQuantity: '100',
+      calories: '150',
+      carbohydrates: '30',
+      protein: '3',
+      fat: '1',
+    });
+    const original = {
+      ...emptyStore(),
+      favoriteFoods: [
+        {
+          id: 'food',
+          ...food,
+        },
+      ],
+    };
+    await f.engine.write(JSON.stringify(original));
+    const changedFood = parsePortionedFoodInput(food.name, {
+      ...createFoodPortionInput(food),
+      quantity: '50',
+    });
+    const changed = {
+      ...original,
+      favoriteFoods: [
+        {
+          id: 'food',
+          ...changedFood,
+        },
+      ],
+    };
+    f.commit.mockRejectedValueOnce(new Error('disk full'));
+    await expect(f.engine.write(JSON.stringify(changed))).rejects.toThrow('disk full');
+    expect(JSON.parse(await f.engine.read())).toEqual(original);
+    await f.engine.write(JSON.stringify(changed));
+    const saved = await f.engine.document();
+    await f.engine.write(JSON.stringify(changed));
+    expect(await f.engine.document()).toEqual(saved);
+    await expect(
+      f.engine.restore(
+        JSON.stringify({
+          ...original,
+          favoriteFoods: [
+            {
+              id: 'food',
+              ...food,
+              calories: 999,
+            },
+          ],
+        }),
+      ),
+    ).rejects.toThrow('즐겨찾는 음식 목록');
+    expect(f.backup).not.toHaveBeenCalled();
+    expect(JSON.parse(await f.engine.read())).toEqual(changed);
+  });
   it('backs up legacy data before committing migration', async () => {
     const { engine, backup, commit } = fixture(JSON.stringify(data));
     expect(JSON.parse(await engine.read())).toEqual(data);

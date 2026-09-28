@@ -112,7 +112,7 @@ export default function FatSecretFoods({ query, composing, onSelect }: Props) {
             ))}
           </View>
           <Text style={[s.caption, s.foodSuggestionsEmpty]}>
-            표시된 제공량 기준이에요. 선택한 뒤 섭취량에 맞게 값을 조정해 주세요.
+            표시된 제공량 기준이에요. 선택한 뒤 섭취량을 입력하면 영양값이 자동 계산됩니다.
           </Text>
         </>
       )}

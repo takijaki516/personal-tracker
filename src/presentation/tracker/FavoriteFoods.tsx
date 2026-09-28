@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { MACRONUTRIENTS, type FavoriteFood } from '../../domain/data';
+import { formatFoodQuantity } from '../../domain/food-portion';
 import Button from './Button';
 import { styles as s } from './styles';
 
@@ -86,6 +87,11 @@ export default function FavoriteFoods({
                       ]}
                     >
                       <Text style={s.body}>{food.name}</Text>
+                      {food.portion && (
+                        <Text style={s.caption}>
+                          섭취량 {formatFoodQuantity(food.portion.quantity, food.portion.unit)}
+                        </Text>
+                      )}
                       <Text style={s.caption}>{food.calories} kcal</Text>
                       {!!nutrition && <Text style={s.caption}>{nutrition}</Text>}
                     </Pressable>

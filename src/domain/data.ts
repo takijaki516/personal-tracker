@@ -1,17 +1,30 @@
-export type Meal = {
-  id: string;
-  name: string;
-  slot: string;
+export type FoodNutrition = {
   calories: number;
   carbohydrates?: number;
   protein?: number;
   fat?: number;
 };
 
+export type FoodPortion = {
+  quantity: number;
+  unit: 'g' | 'serving';
+  referenceQuantity: number;
+  referenceNutrition: FoodNutrition;
+  referenceText?: string;
+};
+
+export type Meal = FoodNutrition & {
+  id: string;
+  name: string;
+  slot: string;
+  portion?: FoodPortion;
+};
+
 export type FavoriteFood = Omit<Meal, 'slot'>;
 
 export const MAX_MEAL_CALORIES = 20000;
 export const MAX_MACRONUTRIENT_GRAMS = 5000;
+export const MAX_FOOD_QUANTITY = 100000;
 export const MACRONUTRIENTS = [
   {
     key: 'carbohydrates',
@@ -50,6 +63,23 @@ export type NutritionGoals = Partial<Record<NutritionKey, number>>;
 
 export function isMealAmount(value: unknown, max: number): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= max;
+}
+
+export function isFoodQuantity(value: unknown): value is number {
+  return isMealAmount(value, MAX_FOOD_QUANTITY) && value > 0;
+}
+
+export function nutritionForPortion(portion: FoodPortion): FoodNutrition {
+  const ratio = portion.quantity / portion.referenceQuantity;
+  const scale = (amount: number) => (ratio === 1 ? amount : Math.round(amount * ratio * 100) / 100);
+  const nutrition: FoodNutrition = { calories: scale(portion.referenceNutrition.calories) };
+  for (const { key } of MACRONUTRIENTS) {
+    const amount = portion.referenceNutrition[key];
+    if (amount !== undefined) {
+      nutrition[key] = scale(amount);
+    }
+  }
+  return nutrition;
 }
 
 export const BODY_PARTS = {
@@ -103,6 +133,62 @@ export function isDate(value: string): boolean {
 const object = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
+export function parseFoodPortion(value: unknown): FoodPortion {
+  if (
+    !object(value) ||
+    !isFoodQuantity(value.quantity) ||
+    !isFoodQuantity(value.referenceQuantity) ||
+    (value.unit !== 'g' && value.unit !== 'serving') ||
+    (value.referenceText !== undefined &&
+      (typeof value.referenceText !== 'string' ||
+        !value.referenceText.trim() ||
+        value.referenceText.length > 300))
+  ) {
+    throw new Error('음식의 섭취량과 기준량을 확인해 주세요.');
+  }
+  const reference = value.referenceNutrition;
+  if (!object(reference) || !isMealAmount(reference.calories, MAX_MEAL_CALORIES)) {
+    throw new Error('음식의 기준 영양정보를 확인해 주세요.');
+  }
+  const referenceNutrition: FoodNutrition = { calories: reference.calories };
+  for (const { key } of MACRONUTRIENTS) {
+    if (reference[key] !== undefined) {
+      if (!isMealAmount(reference[key], MAX_MACRONUTRIENT_GRAMS)) {
+        throw new Error('음식의 기준 영양정보를 확인해 주세요.');
+      }
+      referenceNutrition[key] = reference[key];
+    }
+  }
+  const portion: FoodPortion = {
+    quantity: value.quantity,
+    unit: value.unit === 'g' ? 'g' : 'serving',
+    referenceQuantity: value.referenceQuantity,
+    referenceNutrition,
+  };
+  if (typeof value.referenceText === 'string') {
+    portion.referenceText = value.referenceText.trim();
+  }
+  const totals = nutritionForPortion(portion);
+  for (const { key, label, max, unit } of NUTRITION_METRICS) {
+    if (totals[key] !== undefined && !isMealAmount(totals[key], max)) {
+      throw new Error(`섭취량에 따른 ${label} 합계가 ${max.toLocaleString()}${unit}를 초과합니다.`);
+    }
+  }
+  return portion;
+}
+
+function validFoodPortion(food: Record<string, unknown>): boolean {
+  if (food.portion === undefined) {
+    return true;
+  }
+  try {
+    const totals = nutritionForPortion(parseFoodPortion(food.portion));
+    return NUTRITION_METRICS.every(({ key }) => totals[key] === food[key]);
+  } catch {
+    return false;
+  }
+}
+
 export function parseNutritionGoals(value: unknown): NutritionGoals {
   if (!object(value)) {
     throw new Error('하루 섭취 목표 형식을 확인해 주세요.');
@@ -134,7 +220,8 @@ const validFood = (value: unknown): value is FavoriteFood =>
   isMealAmount(value.calories, MAX_MEAL_CALORIES) &&
   MACRONUTRIENTS.every(
     ({ key }) => value[key] === undefined || isMealAmount(value[key], MAX_MACRONUTRIENT_GRAMS),
-  );
+  ) &&
+  validFoodPortion(value);
 export function parseStore(raw: string): Store {
   const data: unknown = JSON.parse(raw);
   if (!object(data) || data.version !== 1 || !object(data.days)) {
@@ -162,6 +249,9 @@ export function parseStore(raw: string): Store {
         if (food[key] !== undefined) {
           favorite[key] = food[key];
         }
+      }
+      if (food.portion !== undefined) {
+        favorite.portion = parseFoodPortion(food.portion);
       }
       favoriteFoods.push(favorite);
     }
@@ -221,7 +311,10 @@ export function parseStore(raw: string): Store {
       Object.entries(store.days).map(([date, day]) => [
         date,
         {
-          meals: day.meals,
+          meals: day.meals.map((meal) => ({
+            ...meal,
+            ...(meal.portion === undefined ? {} : { portion: parseFoodPortion(meal.portion) }),
+          })),
           workouts: day.workouts.map(({ id, name, bodyPart, sets }) => ({
             id,
             name,

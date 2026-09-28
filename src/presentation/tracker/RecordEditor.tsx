@@ -11,7 +11,6 @@ import {
   View,
 } from 'react-native';
 import {
-  MACRONUTRIENTS,
   MAX_REPS,
   MAX_WEIGHT_KG,
   MAX_WORKOUT_SETS,
@@ -22,7 +21,8 @@ import {
   type Store,
   type WorkoutSet,
 } from '../../domain/data';
-import { findFavoriteFood, parseFoodInput } from '../../domain/favorite-foods';
+import { findFavoriteFood } from '../../domain/favorite-foods';
+import { createMealNutritionInput, parseMealNutritionInput } from '../../domain/food-portion';
 import { foodSearchSelection, type FoodSearchResult } from '../../domain/food-search';
 import { WORKOUT_OPTIONS } from '../../domain/workout-options';
 import Button from './Button';
@@ -31,6 +31,7 @@ import FavoriteFoods from './FavoriteFoods';
 import Field from './Field';
 import FoodNameInput from './FoodNameInput';
 import FoodSelectionScreen from './FoodSelectionScreen';
+import MealNutritionFields from './MealNutritionFields';
 import { styles as s } from './styles';
 import { errorText, type SaveResult } from './useTrackerRecords';
 import WorkoutSelect from './WorkoutSelect';
@@ -70,12 +71,7 @@ export default function RecordEditor({
     editor.kind === 'workout' ? day.workouts.find((entry) => entry.id === editor.id) : undefined;
   const item = meal ?? workout;
   const [name, setName] = useState(item?.name ?? '');
-  const [amount, setAmount] = useState(meal ? String(meal.calories) : '');
-  const [macros, setMacros] = useState(() => ({
-    carbohydrates: meal?.carbohydrates?.toString() ?? '',
-    protein: meal?.protein?.toString() ?? '',
-    fat: meal?.fat?.toString() ?? '',
-  }));
+  const [nutritionInput, setNutritionInput] = useState(() => createMealNutritionInput(meal));
   const [slot, setSlot] = useState(meal?.slot ?? '아침');
   const [bodyPart, setBodyPart] = useState<BodyPart | null>(workout?.bodyPart ?? null);
   const [sets, setSets] = useState<SetInput[]>(
@@ -150,12 +146,7 @@ export default function RecordEditor({
 
   function selectFood(food: Omit<FavoriteFood, 'id'>) {
     setName(food.name);
-    setAmount(String(food.calories));
-    setMacros({
-      carbohydrates: food.carbohydrates?.toString() ?? '',
-      protein: food.protein?.toString() ?? '',
-      fat: food.fat?.toString() ?? '',
-    });
+    setNutritionInput(createMealNutritionInput(food));
     setFormError('');
     setFavoriteMessage('');
     setSelectedSearchFood(null);
@@ -165,11 +156,7 @@ export default function RecordEditor({
     setFormError('');
     setFavoriteMessage('');
     try {
-      return parseFoodInput({
-        name,
-        calories: amount,
-        ...macros,
-      });
+      return parseMealNutritionInput(name, nutritionInput);
     } catch (error) {
       setFormError(errorText(error));
       return null;
@@ -423,35 +410,18 @@ export default function RecordEditor({
         <>
           {selectedSearchFood && (
             <Text style={[s.caption, { marginTop: 12 }]}>
-              FatSecret · {selectedSearchFood.servingText} 기준 영양정보입니다. 섭취량이 다르면 아래
-              값을 조정해 주세요.
+              FatSecret에서 가져온 영양정보입니다. 섭취량을 조절해 주세요.
             </Text>
           )}
-          <Field
-            label="총 칼로리 (kcal)"
-            value={amount}
-            onChangeText={setAmount}
-            numeric
-            maxLength={10}
+          <MealNutritionFields
+            input={nutritionInput}
             disabled={busy}
+            onChange={(input) => {
+              setNutritionInput(input);
+              setFormError('');
+              setFavoriteMessage('');
+            }}
           />
-          {MACRONUTRIENTS.map(({ key, label }) => (
-            <Field
-              key={key}
-              label={`${label} (g)`}
-              value={macros[key]}
-              onChangeText={(value) =>
-                setMacros((current) => ({
-                  ...current,
-                  [key]: value,
-                }))
-              }
-              numeric
-              maxLength={10}
-              disabled={busy}
-            />
-          ))}
-          <Text style={s.caption}>영양소는 알고 있는 값만 입력해 주세요.</Text>
           <View style={s.favoriteFoodActions}>
             <Button
               label={favoriteActionLabel}
@@ -461,8 +431,8 @@ export default function RecordEditor({
             />
             <Text style={s.caption}>
               {existingFavorite
-                ? '같은 이름의 음식에 현재 칼로리와 영양소를 저장합니다.'
-                : '현재 음식과 칼로리·영양소를 저장해 다음 기록에 사용할 수 있어요.'}
+                ? '같은 이름의 음식에 현재 섭취량과 영양정보를 저장합니다.'
+                : '현재 음식과 섭취량·영양정보를 저장해 다음 기록에 사용할 수 있어요.'}
             </Text>
             {!!favoriteMessage && (
               <Text accessibilityLiveRegion="polite" style={s.body}>

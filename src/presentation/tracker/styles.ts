@@ -219,6 +219,21 @@ export const styles = StyleSheet.create({
     gap: 8,
     marginTop: 24,
   },
+  portionUnits: {
+    marginTop: 20,
+    gap: 8,
+  },
+  portionNutritionSummary: {
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: '#eaf0df',
+  },
+  portionNutritionAmount: {
+    fontSize: 19,
+    fontWeight: '600',
+    color: '#245d48',
+  },
   empty: {
     paddingVertical: 35,
     alignItems: 'center',

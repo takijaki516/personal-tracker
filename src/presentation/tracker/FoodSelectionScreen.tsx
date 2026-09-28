@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import type { FavoriteFood, Store } from '../../domain/data';
+import { formatFoodQuantity } from '../../domain/food-portion';
 import type { FoodSearchResult } from '../../domain/food-search';
 import { getFoodSuggestions } from '../../domain/food-suggestions';
 import { canSearchFoods } from '../../infrastructure/food-search';
@@ -148,6 +149,11 @@ export default function FoodSelectionScreen({
                   style={({ pressed }) => [s.foodSuggestionOption, pressed && s.selected]}
                 >
                   <Text style={s.body}>{food.name}</Text>
+                  {food.portion && (
+                    <Text style={s.caption}>
+                      섭취량 {formatFoodQuantity(food.portion.quantity, food.portion.unit)}
+                    </Text>
+                  )}
                   <Text style={s.caption}>
                     {food.calories} kcal{recordedDate ? ` · ${recordedDate}` : ''}
                   </Text>
